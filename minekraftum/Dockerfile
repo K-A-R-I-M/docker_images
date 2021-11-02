@@ -1,7 +1,6 @@
 FROM openjdk:16
 ENV RAM=1.2G
-ENV JAVA_HOME=/opt/java/openjdk 
-ENV PATH=/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/src/app
+ENV JAVA_HOME=/opt/java/openjdk
 COPY ./server.jar /usr/src/app/server.jar
 WORKDIR /usr/src/app
 EXPOSE 25565

@@ -1,6 +1,6 @@
 # docker_images
 
-[![Made with Docker](https://img.shields.io/badge/Made%20with-Bash-1f82ff.svg)](./)
+[![Made with Docker](https://img.shields.io/badge/Made%20with-Docker-1f82ff.svg)](./)
 
 ## Description
 Docker images repo

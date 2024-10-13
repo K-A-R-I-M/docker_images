@@ -27,7 +27,7 @@ print(f"Latest Minecraft server JAR URL: {server_jar_url}")
 server_jar_response = requests.get(server_jar_url)
 
 # Save it to a file
-with open("minecraft_server_latest.jar", "wb") as file:
+with open("server.jar", "wb") as file:
     file.write(server_jar_response.content)
 
 print("Minecraft server JAR downloaded successfully!")

@@ -1,4 +1,4 @@
-FROM docker.io/library/openjdk:16
+FROM docker.io/library/openjdk:21
 ENV RAM=1.2G
 ENV JAVA_HOME=/opt/java/openjdk
 WORKDIR /usr/src/app

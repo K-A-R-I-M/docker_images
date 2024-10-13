@@ -1,4 +1,4 @@
-FROM openjdk:16
+FROM docker.io/library/openjdk:16
 ENV RAM=1.2G
 ENV JAVA_HOME=/opt/java/openjdk
 COPY ./server.jar /usr/src/app/server.jar

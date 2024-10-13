@@ -6,4 +6,4 @@ COPY ./server.jar /usr/src/app/server.jar
 EXPOSE 25565
 RUN java -jar server.jar nogui
 RUN sed -i "s/eula=false/eula=true/g" /usr/src/app/eula.txt
-CMD ["ls"; "-la";";","java", "-Xmx1024M", "-Xms1024M", "-jar", "server.jar", "nogui"]
+CMD ["ls","-la",";","java", "-Xmx1024M", "-Xms1024M", "-jar", "server.jar", "nogui"]

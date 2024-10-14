@@ -1,9 +1,9 @@
 FROM docker.io/library/openjdk:21
 ENV RAM=1.2G
 ENV JAVA_HOME=/opt/java/openjdk
-WORKDIR /usr/src/app
-COPY ./server.jar /usr/src/app/server.jar
-COPY ./wrapper.sh /usr/src/app/wrapper.sh
+WORKDIR /app
+COPY ./server.jar /app/server.jar
+COPY ./wrapper.sh /wrapper.sh
 EXPOSE 25565
 RUN java -jar server.jar nogui
-CMD ["./wrapper.sh"]
+CMD ["/wrapper.sh"]

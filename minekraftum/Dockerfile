@@ -6,4 +6,4 @@ COPY ./server.jar /usr/src/app/server.jar
 COPY ./wrapper.sh /usr/src/app/wrapper.sh
 EXPOSE 25565
 RUN java -jar server.jar nogui
-CMD ./wrapper.sh
+CMD ["./wrapper.sh"]

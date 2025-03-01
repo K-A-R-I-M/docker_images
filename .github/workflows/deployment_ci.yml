@@ -1,0 +1,64 @@
+name: GitHub CI/CD
+run-name: ${{ github.actor }} pushing, testing and deploying a new version of Minecraftum
+on:
+  push:
+    branches:
+      - "main"
+jobs:
+  Check_Build_Minecraftum_Container_Image:
+    runs-on: self-hosted
+    outputs:
+      is-build-required: ${{ steps.step_check_folder.outputs.build_req }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Check if manicraftum folder changed
+        id: step_check_folder
+        run: |
+          if git diff --quiet HEAD^ HEAD -- manicraftum; then
+            echo "No changes in manicraftum folder."
+            echo "build_req=false" >> $GITHUB_ENV
+            echo "build_req=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected in manicraftum folder."
+            echo "build_req=true" >> $GITHUB_ENV
+            echo "build_req=true" >> $GITHUB_OUTPUT
+          fi
+
+  Build_Minecraftum_Container_Image:
+    needs: Check_Build_Minecraftum_Container_Image
+    runs-on: self-hosted
+    if: needs.Check_Build_Minecraftum_Container_Image.outputs.is-build-required == 'true'
+    steps:
+      - name: Podman Cleanup current containers
+        run: podman rmi --all -f
+      - name: Podman Building Minecraftum Image Back
+        run: podman build -t minecraftum ./minecraftum/
+
+  Test_Minecraftum_Container_Image:
+    runs-on: self-hosted
+    needs: Build_Minecraftum_Container_Image
+    steps:
+      - name: Podman Testing Minecraftum Image Front
+        run: podman run --rm localhost/minecraftum echo "test inside a container"
+
+  Push_Minecraftum_Container_Image:
+    runs-on: self-hosted
+    needs: Test_Minecraftum_Container_Image
+    steps:
+      - name: Podman tag Prod Minecraftum Image Back
+        run: podman tag localhost/minecraftum localhost:32000/minecraftum:1.0.0
+      - name: Podman push Prod Minecraftum Image Back
+        run: podman push --tls-verify=false  localhost:32000/minecraftum:1.0.0
+
+  Cleanup_Minecraftum:
+    runs-on: self-hosted
+    needs: Push_Minecraftum_Container_Image
+    steps:
+      - name: Podman cleanup images
+        run: podman image prune -f || true
+      - name: Podman cleanup containers
+        run: podman container prune -f || true

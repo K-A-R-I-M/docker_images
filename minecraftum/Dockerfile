@@ -9,4 +9,5 @@ COPY ./server.jar /app/server.jar
 COPY ./wrapper.sh /wrapper.sh
 
 EXPOSE 25565
+
 CMD ["/wrapper.sh"]

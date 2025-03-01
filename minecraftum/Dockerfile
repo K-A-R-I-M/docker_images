@@ -8,9 +8,9 @@ WORKDIR /app
 COPY ./server.jar /app/server.jar
 RUN chmod 777 /app/server.jar
 
-COPY ./wrapper.sh /wrapper.sh
-RUN chmod 777 /wrapper.sh
+COPY ./wrapper.sh /app/wrapper.sh
+RUN chmod 777 /app/wrapper.sh
 
 EXPOSE 25565
 
-CMD ["bash -c '/wrapper.sh'"]
+CMD bash ./wrapper.sh

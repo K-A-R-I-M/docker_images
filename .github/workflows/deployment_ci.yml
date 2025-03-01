@@ -18,7 +18,7 @@ jobs:
       - name: Check if manicraftum folder changed
         id: step_check_folder
         run: |
-          if git diff --quiet HEAD^ HEAD -- manicraftum; then
+          if git diff --quiet HEAD^ HEAD -- minecraftum; then
             echo "No changes in manicraftum folder."
             echo "build_req=false" >> $GITHUB_ENV
             echo "build_req=false" >> $GITHUB_OUTPUT

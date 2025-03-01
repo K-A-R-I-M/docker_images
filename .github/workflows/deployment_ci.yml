@@ -31,7 +31,7 @@ jobs:
   Build_Minecraftum_Container_Image:
     # needs: Check_Build_Minecraftum_Container_Image
     runs-on: self-hosted
-    if: needs.Check_Build_Minecraftum_Container_Image.outputs.is-build-required == 'true'
+    # if: needs.Check_Build_Minecraftum_Container_Image.outputs.is-build-required == 'true'
     steps:
       - name: Podman Cleanup current containers
         run: podman rmi --all -f

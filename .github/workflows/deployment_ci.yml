@@ -19,11 +19,11 @@ jobs:
         id: step_check_folder
         run: |
           if git diff --quiet HEAD^ HEAD -- minecraftum; then
-            echo "No changes in manicraftum folder."
+            echo "No changes in minecraftum folder."
             echo "build_req=false" >> $GITHUB_ENV
             echo "build_req=false" >> $GITHUB_OUTPUT
           else
-            echo "Changes detected in manicraftum folder."
+            echo "Changes detected in minecraftum folder."
             echo "build_req=true" >> $GITHUB_ENV
             echo "build_req=true" >> $GITHUB_OUTPUT
           fi
@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Podman Cleanup current containers
         run: podman rmi --all -f
+      - name: Get latest server.jar
+        run: ./get_minecraft_server.py
       - name: Podman Building Minecraftum Image Back
         run: podman build -t minecraftum ./minecraftum/
 

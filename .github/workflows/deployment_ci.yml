@@ -36,7 +36,7 @@ jobs:
       - name: Podman Cleanup current containers
         run: podman rmi --all -f
       - name: Get latest server.jar
-        run: ./get_minecraft_server.py
+        run: bash -c "cd ./minecraftum;./get_minecraft_server.py"
       - name: Podman Building Minecraftum Image Back
         run: podman build -t minecraftum ./minecraftum/
 

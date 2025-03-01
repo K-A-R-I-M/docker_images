@@ -6,10 +6,10 @@ ENV JAVA_HOME=/opt/java/openjdk
 WORKDIR /app
 
 COPY ./server.jar /app/server.jar
-RUN chmod +x /app/server.jar
+RUN chmod 777 /app/server.jar
 
 COPY ./wrapper.sh /wrapper.sh
-RUN chmod +x /wrapper.sh
+RUN chmod 777 /wrapper.sh
 
 EXPOSE 25565
 

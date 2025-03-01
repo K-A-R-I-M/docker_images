@@ -13,4 +13,4 @@ RUN chmod 777 /wrapper.sh
 
 EXPOSE 25565
 
-CMD ["/wrapper.sh"]
+CMD ["bash -c '/wrapper.sh'"]

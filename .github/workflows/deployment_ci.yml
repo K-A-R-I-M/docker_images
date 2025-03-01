@@ -52,9 +52,9 @@ jobs:
     needs: Test_Minecraftum_Container_Image
     steps:
       - name: Podman tag Prod Minecraftum Image Back
-        run: podman tag localhost/minecraftum localhost:32000/minecraftum:1.0.0
+        run: podman tag localhost/minecraftum localhost:32000/minecraftum:2.0.0
       - name: Podman push Prod Minecraftum Image Back
-        run: podman push --tls-verify=false  localhost:32000/minecraftum:1.0.0
+        run: podman push --tls-verify=false  localhost:32000/minecraftum:2.0.0
 
   Cleanup_Minecraftum:
     runs-on: self-hosted

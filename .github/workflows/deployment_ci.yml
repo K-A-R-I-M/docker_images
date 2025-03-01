@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check if manicraftum folder changed
+      - name: Check if minecraftum folder changed
         id: step_check_folder
         run: |
           if git diff --quiet HEAD^ HEAD -- minecraftum; then

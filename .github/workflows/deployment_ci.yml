@@ -5,38 +5,38 @@ on:
     branches:
       - "main"
 jobs:
-  Check_Build_Minecraftum_Container_Image:
-    runs-on: self-hosted
-    outputs:
-      is-build-required: ${{ steps.step_check_folder.outputs.build_req }}
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
+  # Check_Build_Minecraftum_Container_Image:
+  #   runs-on: self-hosted
+  #   outputs:
+  #     is-build-required: ${{ steps.step_check_folder.outputs.build_req }}
+  #   steps:
+  #     - name: Check out repository code
+  #       uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 2
 
-      - name: Check if minecraftum folder changed
-        id: step_check_folder
-        run: |
-          if git diff --quiet HEAD^ HEAD -- minecraftum; then
-            echo "No changes in minecraftum folder."
-            echo "build_req=false" >> $GITHUB_ENV
-            echo "build_req=false" >> $GITHUB_OUTPUT
-          else
-            echo "Changes detected in minecraftum folder."
-            echo "build_req=true" >> $GITHUB_ENV
-            echo "build_req=true" >> $GITHUB_OUTPUT
-          fi
+  #     - name: Check if minecraftum folder changed
+  #       id: step_check_folder
+  #       run: |
+  #         if git diff --quiet HEAD^ HEAD -- minecraftum; then
+  #           echo "No changes in minecraftum folder."
+  #           echo "build_req=false" >> $GITHUB_ENV
+  #           echo "build_req=false" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "Changes detected in minecraftum folder."
+  #           echo "build_req=true" >> $GITHUB_ENV
+  #           echo "build_req=true" >> $GITHUB_OUTPUT
+  #         fi
 
   Build_Minecraftum_Container_Image:
-    needs: Check_Build_Minecraftum_Container_Image
+    # needs: Check_Build_Minecraftum_Container_Image
     runs-on: self-hosted
     if: needs.Check_Build_Minecraftum_Container_Image.outputs.is-build-required == 'true'
     steps:
       - name: Podman Cleanup current containers
         run: podman rmi --all -f
       - name: Get latest server.jar
-        run: cd ./minecraftum;ls -ls; ./get_minecraft_server.py
+        run: cd ./minecraftum; python3 ./get_minecraft_server.py
       - name: Podman Building Minecraftum Image Back
         run: podman build -t minecraftum ./minecraftum/
 

@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: ""
+    path: "/opt/minecraftum/data"
 ---
 
 apiVersion: v1
@@ -46,9 +46,16 @@ spec:
       containers:
       - name: minecraftum
         image: localhost:32000/minecraftum:1.0.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 25565
-
+        volumeMounts:
+          - name: data
+            mountPath: "/opt/minecraftum/data"
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: minecraftum-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -62,5 +69,4 @@ spec:
     - port: 19151
       targetPort: 25565
       protocol: UDP
-
 ---

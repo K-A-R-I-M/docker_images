@@ -2,11 +2,9 @@ FROM docker.io/library/alpine AS build
 
 WORKDIR /app/
 
-RUN apk add --update --no-cache python3 py3-pip
+RUN apk add --update --no-cache python3 py3-requests
 
 COPY ./get_minecraft_server.py ./
-
-RUN pip3 install requests
 
 RUN python get_minecraft_server.py
 

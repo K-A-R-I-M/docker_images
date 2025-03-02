@@ -4,7 +4,7 @@ WORKDIR /app/
 
 RUN apk add --update --no-cache python3
 
-COPY ./get_minecraft_server.py /
+COPY ./get_minecraft_server.py ./
 
 RUN python get_minecraft_server.py
 

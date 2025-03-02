@@ -10,7 +10,6 @@ RUN python get_minecraft_server.py
 
 FROM docker.io/library/openjdk:21
 
-ENV RAM="8G"
 ENV JAVA_HOME=/opt/java/openjdk
 
 WORKDIR /app
@@ -25,4 +24,4 @@ RUN echo "eula=true" > eula.txt
 
 EXPOSE 25565
 
-ENTRYPOINT ["java", "-Xms1G", "-Xmx$RAM", "-jar", "./server.jar", "nogui"]
+ENTRYPOINT ["java", "-Xms1G", "-Xmx12G", "-jar", "./server.jar", "nogui"]

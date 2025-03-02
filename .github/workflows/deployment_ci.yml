@@ -25,7 +25,7 @@ jobs:
       - name: Get latest server.jar
         run: cd ./minecraftum; python3 ./get_minecraft_server.py
       - name: Podman Building Minecraftum Image Back
-        run: podman build -t localhost/minecraftum:latest ./minecraftum/
+        run: podman build -t minecraftum ./minecraftum/
 
   Test_Minecraftum_Container_Image:
     runs-on: self-hosted

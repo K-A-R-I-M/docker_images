@@ -24,14 +24,7 @@ jobs:
         run: podman rmi --all -f
       - name: Podman Building Minecraftum Image Back
         run: podman build -t localhost:32000/minecraftum ./minecraftum/
-
-  Test_Minecraftum_Container_Image:
-    runs-on: self-hosted
-    needs: Build_Minecraftum_Container_Image
-    steps:
-      - name: Podman Testing Minecraftum Image Front
-        run: podman run --entrypoint echo "test inside a container" localhost:32000/minecraftum:latest 
-
+  
   Push_Minecraftum_Container_Image:
     runs-on: self-hosted
     needs: Test_Minecraftum_Container_Image

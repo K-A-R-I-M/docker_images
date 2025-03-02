@@ -40,8 +40,12 @@ jobs:
     steps:
       - name: Podman tag Prod Minecraftum Image Back
         run: podman tag localhost/minecraftum localhost:32000/minecraftum:7.0.0
+      - name: Podman tag Prod Minecraftum Image Back
+        run: podman tag localhost/minecraftum localhost:32000/minecraftum:latest
       - name: Podman push Prod Minecraftum Image Back
         run: podman push --tls-verify=false  localhost:32000/minecraftum:7.0.0
+      - name: Podman push Prod Minecraftum Image Back
+        run: podman push --tls-verify=false  localhost:32000/minecraftum:latest
 
   Cleanup_Minecraftum:
     runs-on: self-hosted

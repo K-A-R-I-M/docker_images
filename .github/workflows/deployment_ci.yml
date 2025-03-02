@@ -22,28 +22,20 @@ jobs:
     steps:
       - name: Podman Cleanup current containers
         run: podman rmi --all -f
-      - name: Get latest server.jar
-        run: cd ./minecraftum; python3 ./get_minecraft_server.py
       - name: Podman Building Minecraftum Image Back
-        run: podman build -t minecraftum ./minecraftum/
+        run: podman build -t localhost:32000/minecraftum ./minecraftum/
 
   Test_Minecraftum_Container_Image:
     runs-on: self-hosted
     needs: Build_Minecraftum_Container_Image
     steps:
       - name: Podman Testing Minecraftum Image Front
-        run: podman run localhost/minecraftum echo "test inside a container"
+        run: podman run localhost:32000/minecraftum:latest echo "test inside a container"
 
   Push_Minecraftum_Container_Image:
     runs-on: self-hosted
     needs: Test_Minecraftum_Container_Image
     steps:
-      - name: Podman tag Prod Minecraftum Image Back
-        run: podman tag localhost/minecraftum localhost:32000/minecraftum:7.0.0
-      - name: Podman tag Prod Minecraftum Image Back
-        run: podman tag localhost/minecraftum localhost:32000/minecraftum:latest
-      - name: Podman push Prod Minecraftum Image Back
-        run: podman push --tls-verify=false  localhost:32000/minecraftum:7.0.0
       - name: Podman push Prod Minecraftum Image Back
         run: podman push --tls-verify=false  localhost:32000/minecraftum:latest
 

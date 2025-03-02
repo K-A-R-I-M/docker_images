@@ -2,7 +2,7 @@ FROM docker.io/library/alpine AS build
 
 WORKDIR /app/
 
-RUN apk add --update --no-cache python
+RUN apk add --update --no-cache python3
 
 COPY ./* /
 

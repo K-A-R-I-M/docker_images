@@ -25,4 +25,4 @@ RUN echo "eula=true" > eula.txt
 
 EXPOSE 25565
 
-CMD bash ./wrapper.sh
+ENTRYPOINT ["java", "-Xms1G", "-Xmx$RAM", "-jar", "./server.jar", "nogui"]

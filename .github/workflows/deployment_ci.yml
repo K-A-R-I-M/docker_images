@@ -27,7 +27,7 @@ jobs:
   
   Push_Minecraftum_Container_Image:
     runs-on: self-hosted
-    needs: Test_Minecraftum_Container_Image
+    needs: Build_Minecraftum_Container_Image
     steps:
       - name: Podman push Prod Minecraftum Image Back
         run: podman push --tls-verify=false  localhost:32000/minecraftum:latest

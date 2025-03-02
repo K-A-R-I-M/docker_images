@@ -30,7 +30,7 @@ jobs:
     needs: Build_Minecraftum_Container_Image
     steps:
       - name: Podman Testing Minecraftum Image Front
-        run: podman run localhost:32000/minecraftum:latest echo "test inside a container"
+        run: podman run --entrypoint echo "test inside a container" localhost:32000/minecraftum:latest 
 
   Push_Minecraftum_Container_Image:
     runs-on: self-hosted

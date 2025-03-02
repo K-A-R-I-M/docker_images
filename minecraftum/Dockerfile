@@ -1,3 +1,13 @@
+FROM docker.io/library/alpine AS build
+
+WORKDIR /app/
+
+RUN apk add --update --no-cache python
+
+COPY ./* /
+
+RUN python get_minecraft_server.py
+
 FROM docker.io/library/openjdk:21
 
 ENV RAM="8G"
@@ -5,11 +15,13 @@ ENV JAVA_HOME=/opt/java/openjdk
 
 WORKDIR /app
 
-COPY ./server.jar /app/server.jar
-RUN chmod 777 /app/server.jar
+COPY --from=build /app/*.jar ./server.jar
+COPY ./* ./
 
-COPY ./wrapper.sh /app/wrapper.sh
-RUN chmod 777 /app/wrapper.sh
+RUN chmod 777 /app/*
+
+# Accept EULA by setting EULA=true
+RUN echo "eula=true" > eula.txt
 
 EXPOSE 25565
 

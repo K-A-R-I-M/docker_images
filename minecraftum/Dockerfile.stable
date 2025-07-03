@@ -1,0 +1,27 @@
+FROM docker.io/library/alpine AS build
+
+WORKDIR /app/
+
+RUN apk add --update --no-cache python3 py3-requests
+
+COPY ./get_minecraft_server.py ./
+
+RUN python get_minecraft_server.py
+
+FROM docker.io/library/openjdk:21
+
+ENV JAVA_HOME=/opt/java/openjdk
+
+WORKDIR /app
+
+COPY --from=build /app/*.jar ./server.jar
+COPY ./* ./
+
+RUN chmod 777 /app/*
+
+# Accept EULA by setting EULA=true
+RUN echo "eula=true" > eula.txt
+
+EXPOSE 25565
+
+ENTRYPOINT ["java", "-Xms1G", "-Xmx12G", "-jar", "./server.jar", "nogui"]

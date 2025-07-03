@@ -29,11 +29,11 @@ jobs:
     runs-on: self-hosted
     needs: Build_Minecraftum_Container_Image
     steps:
-      - name: Get env vars
+      - name: Podman login Prod Minecraftum Image Dockerhub
         env:
           TOKEN: ${{ secrets.TOKEN }}
-      - name: Podman login Prod Minecraftum Image Dockerhub
         run: podman login -u k4rim -p $TOKEN
+
       - name: Podman push Prod Minecraftum Image
         run: podman push --tls-verify=false  docker.io/k4rim/minecraftum:alp
 

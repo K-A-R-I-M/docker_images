@@ -4,7 +4,7 @@ ENV JAVA_HOME=/opt/java/openjdk
 
 WORKDIR /app
 
-RUN chmod 777 /app/*
+RUN chmod 777 /app/
 
 EXPOSE 25565
 

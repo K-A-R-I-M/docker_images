@@ -22,14 +22,19 @@ jobs:
     steps:
       - name: Podman Cleanup current containers
         run: podman rmi docker.io/k4rim/minecraftum:alp -f
-      - name: Podman Building Minecraftum Image Back
+      - name: Podman Building Minecraftum Image
         run: podman build -t docker.io/k4rim/minecraftum:alp -f ./minecraftum/Dockerfile ./minecraftum/
   
   Push_Minecraftum_Container_Image:
     runs-on: self-hosted
     needs: Build_Minecraftum_Container_Image
     steps:
-      - name: Podman push Prod Minecraftum Image Back
+      - name: Get env vars
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+      - name: Podman login Prod Minecraftum Image Dockerhub
+        run: podman login -u k4rim -p $TOKEN
+      - name: Podman push Prod Minecraftum Image
         run: podman push --tls-verify=false  docker.io/k4rim/minecraftum:alp
 
   Cleanup_Minecraftum:

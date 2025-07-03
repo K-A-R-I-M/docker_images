@@ -32,7 +32,7 @@ jobs:
       - name: Podman login Prod Minecraftum Image Dockerhub
         env:
           TOKEN: ${{ secrets.TOKEN }}
-        run: podman login -u k4rim -p $TOKEN
+        run: podman login -u k4rim -p $TOKEN docker.io/k4rim
 
       - name: Podman push Prod Minecraftum Image
         run: podman push --tls-verify=false  docker.io/k4rim/minecraftum:alp

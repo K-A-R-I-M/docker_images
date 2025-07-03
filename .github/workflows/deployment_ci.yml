@@ -21,7 +21,7 @@ jobs:
     # if: needs.Check_Build_Minecraftum_Container_Image.outputs.is-build-required == 'true'
     steps:
       - name: Podman Cleanup current containers
-        run: podman rmi --all -f
+        run: podman rmi docker.io/k4rim/minecraftum:alp -f
       - name: Podman Building Minecraftum Image Back
         run: podman build -t docker.io/k4rim/minecraftum:alp -f ./minecraftum/Dockerfile ./minecraftum/
   

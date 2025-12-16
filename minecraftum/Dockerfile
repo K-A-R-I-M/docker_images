@@ -1,4 +1,4 @@
-FROM docker.io/library/openjdk:21
+FROM docker.io/library/openjdk:27
 
 ENV JAVA_HOME=/opt/java/openjdk
 

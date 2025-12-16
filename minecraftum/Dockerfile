@@ -1,4 +1,4 @@
-FROM docker.io/library/openjdk:27
+FROM docker.io/azul/zulu-openjdk:21-latest
 
 ENV JAVA_HOME=/opt/java/openjdk
 

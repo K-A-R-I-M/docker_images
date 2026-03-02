@@ -7,16 +7,16 @@ RUN sh /uv.sh && rm /uv.sh
 ENV PATH="/root/.local/bin:$PATH"
 
 #----- Setup minecraft serv -----
-WORKDIR /server
+WORKDIR /app
 
 COPY requirements.txt start_server.py ./
 
 RUN uv pip install --system -r requirements.txt
 
 RUN mkdir data
-WORKDIR /server/data
+WORKDIR /app/data
 
 EXPOSE 25565
 
 #----- Run -----
-CMD ["uv", "run", "/server/start_server.py"]
+CMD ["uv", "run", "/app/start_server.py"]

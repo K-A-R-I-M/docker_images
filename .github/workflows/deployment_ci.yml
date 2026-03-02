@@ -40,7 +40,7 @@ jobs:
         run: podman login -u k4rim -p $TOKEN docker.io/k4rim
 
       - name: Podman push Prod Minecraftum Image
-        run: podman push --tls-verify=false  docker.io/k4rim/minecraftum:kar
+        run: podman push --tls-verify=false  docker.io/k4rim/minecraftum:machine
       # alpinn image
       - name: Podman push Prod Minecraftum Image
         run: podman push --tls-verify=false  docker.io/k4rim/minecraftum:alp
@@ -53,4 +53,5 @@ jobs:
         run: podman image prune -f || true
       - name: Podman cleanup containers
         run: podman container prune -f || true
+
 

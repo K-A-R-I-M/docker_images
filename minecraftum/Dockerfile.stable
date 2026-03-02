@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM docker.io/library/eclipse-temurin:21-jre-alpine
 
 #----- Install python uv -----
 ADD https://astral.sh/uv/install.sh /uv.sh

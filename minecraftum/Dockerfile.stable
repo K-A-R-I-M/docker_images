@@ -11,8 +11,8 @@ WORKDIR /app
 
 COPY requirements.txt start_server.py ./
 
-RUN apk add python3
-RUN uv pip install --system -r requirements.txt
+RUN uv python install 3.12
+RUN uv pip install -r requirements.txt
 
 RUN mkdir data
 WORKDIR /app/data

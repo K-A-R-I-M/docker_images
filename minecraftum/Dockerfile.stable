@@ -1,17 +1,11 @@
 FROM docker.io/library/eclipse-temurin:21-jre-alpine
 
-#----- Install python uv -----
-ADD https://astral.sh/uv/install.sh /uv.sh
-RUN sh /uv.sh && rm /uv.sh
-
-ENV PATH="/root/.local/bin:$PATH"
-
 #----- Setup minecraft serv -----
 WORKDIR /app
 
 COPY requirements.txt start_server.py ./
 
-RUN apk add --no-cache python3
+RUN apk add --no-cache python3 uv
 RUN uv pip install --system -r requirements.txt
 
 RUN mkdir data

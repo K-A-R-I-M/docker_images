@@ -21,9 +21,9 @@ jobs:
     # if: needs.Check_Build_Minecraftum_Container_Image.outputs.is-build-required == 'true'
     steps:
       - name: Podman Cleanup current containers
-        run: podman rmi docker.io/k4rim/minecraftum:kar -f
+        run: podman rmi docker.io/k4rim/minecraftum:machine -f
       - name: Podman Building Minecraftum Image
-        run: podman build -t docker.io/k4rim/minecraftum:kar -f ./minecraftum/Dockerfile.stable ./minecraftum/
+        run: podman build -t docker.io/k4rim/minecraftum:machine -f ./minecraftum/Dockerfile.stable ./minecraftum/
       # alpinn image
       - name: Podman Cleanup current containers
         run: podman rmi docker.io/k4rim/minecraftum:alp -f

@@ -86,7 +86,7 @@ def manage_mods():
     """
 
     mods_dir = "mods"
-    zip_path = "/mods.zip"
+    zip_path = "/app/mods.zip"
     marker_file = ".mods_extracted"
 
     # Create mods directory if missing

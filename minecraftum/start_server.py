@@ -74,7 +74,7 @@ def args_update():
 
 def version_k(mc_version, forge_version):
     with open("version_k", "w+") as f:
-        f.write(f"{mc_version}\n-Xmx{forge_version}\n")
+        f.write(f"{mc_version}\n{forge_version}\n")
 
 
 def start_server():

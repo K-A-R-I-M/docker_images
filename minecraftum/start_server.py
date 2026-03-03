@@ -2,59 +2,97 @@
 import requests
 import subprocess
 import os
-import glob
+import sys
 
 JAVA = "java"
-RAM = "4G"
+RAM = os.environ.get("RAM", "8G")
 
-MC_VERSION = "1.20.1"
-FORGE_VERSION = "47.2.0"
+MC_MANIFEST = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
+FORGE_PROMO = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"
 
-INSTALLER = f"forge-{MC_VERSION}-{FORGE_VERSION}-installer.jar"
-FORGE_SERVER_PATTERN = f"forge-{MC_VERSION}-{FORGE_VERSION}-*.jar"
 
-installer_url = (
-    f"https://maven.minecraftforge.net/net/minecraftforge/forge/"
-    f"{MC_VERSION}-{FORGE_VERSION}/"
-    f"{INSTALLER}"
-)
-
-# Step 1 — Download installer if missing
-if not os.path.exists(INSTALLER):
-    print("Downloading Forge installer...")
-    r = requests.get(installer_url)
+def get_latest_mc():
+    r = requests.get(MC_MANIFEST)
     r.raise_for_status()
-    open(INSTALLER, "wb").write(r.content)
+    return r.json()["latest"]["release"]
 
-# Step 2 — Check if Forge server already installed
-forge_server_jars = [
-    f for f in glob.glob(FORGE_SERVER_PATTERN)
-    if "installer" not in f
-]
 
-if not forge_server_jars:
-    print("Forge not installed. Installing...")
-    subprocess.run([JAVA, "-jar", INSTALLER, "--installServer"], check=True)
-else:
-    print("Forge already installed. Skipping install.")
+def get_latest_forge(mc_version):
+    r = requests.get(FORGE_PROMO)
+    r.raise_for_status()
+    promos = r.json()["promos"]
 
-# Step 3 — Accept EULA automatically
-if not os.path.exists("eula.txt") or "true" not in open("eula.txt").read():
-    print("Accepting EULA...")
-    with open("eula.txt", "w") as f:
-        f.write("eula=true\n")
+    if f"{mc_version}-recommended" in promos:
+        return promos[f"{mc_version}-recommended"]
 
-# Step 4 — Find Forge server jar
-forge_server_jars = [
-    f for f in glob.glob(FORGE_SERVER_PATTERN)
-    if "installer" not in f
-]
+    if f"{mc_version}-latest" in promos:
+        return promos[f"{mc_version}-latest"]
 
-if not forge_server_jars:
-    raise Exception("Forge server jar not found after install")
+    print(f"No Forge version available for Minecraft {mc_version}")
+    sys.exit(1)
 
-forge_server = forge_server_jars[0]
 
-# Step 5 — Start server
-print(f"Starting server: {forge_server}")
-subprocess.run([JAVA, f"-Xmx{RAM}", "-jar", forge_server, "nogui"])
+def download_installer(mc_version, forge_version):
+    forge_full = f"{mc_version}-{forge_version}"
+    installer = f"forge-{forge_full}-installer.jar"
+
+    if os.path.exists(installer):
+        return installer
+
+    url = (
+        f"https://maven.minecraftforge.net/net/minecraftforge/forge/"
+        f"{forge_full}/{installer}"
+    )
+
+    print(f"Downloading Forge installer: {forge_full}")
+    r = requests.get(url)
+    r.raise_for_status()
+
+    with open(installer, "wb") as f:
+        f.write(r.content)
+
+    return installer
+
+
+def install_if_needed(installer):
+    if not os.path.exists("run.sh"):
+        print("Installing Forge server...")
+        subprocess.run([JAVA, "-jar", installer, "--installServer"], check=True)
+    else:
+        print("Forge already installed. Skipping install.")
+
+
+def accept_eula():
+    if not os.path.exists("eula.txt") or "true" not in open("eula.txt").read():
+        print("Accepting EULA...")
+        with open("eula.txt", "w") as f:
+            f.write("eula=true\n")
+
+def args_update():
+    with open("user_jvm_args.txt", "w") as f:
+        f.write(f"-Xms1G\n-Xmx{RAM}\n")
+
+
+def start_server():
+    print("Starting Forge server...")
+    # Use sh explicitly (important in Alpine/Docker)
+    subprocess.run(["sh", "./run.sh"], check=True)
+
+
+def main():
+    print("Fetching latest versions...")
+
+    mc_version = get_latest_mc()
+    forge_version = get_latest_forge(mc_version)
+
+    print(f"Minecraft version: {mc_version}")
+    print(f"Forge version: {forge_version}")
+
+    installer = download_installer(mc_version, forge_version)
+    install_if_needed(installer)
+    accept_eula()
+    start_server()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,9 @@
 FROM docker.io/library/eclipse-temurin:21-jre-alpine
 
+#----- Copy mods -----
+
+COPY mods/mods.zip /
+
 #----- Setup minecraft serv -----
 WORKDIR /app
 

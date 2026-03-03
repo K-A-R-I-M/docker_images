@@ -86,7 +86,7 @@ def manage_mods():
     """
 
     mods_dir = "mods"
-    zip_path = "/opt/minecraftum/mods.zip"
+    zip_path = "/mods.zip"
     marker_file = ".mods_extracted"
 
     # Create mods directory if missing

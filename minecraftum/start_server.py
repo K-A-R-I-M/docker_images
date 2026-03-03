@@ -3,6 +3,8 @@ import requests
 import subprocess
 import os
 import sys
+import zipfile
+import shutil
 
 JAVA = "java"
 RAM = os.environ.get("RAM", "8G")
@@ -76,8 +78,6 @@ def version_k(mc_version, forge_version):
     with open("version_k", "w+") as f:
         f.write(f"{mc_version}\n{forge_version}\n")
 
-import zipfile
-import shutil
 
 def manage_mods():
     """

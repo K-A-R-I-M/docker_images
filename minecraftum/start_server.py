@@ -72,6 +72,10 @@ def args_update():
     with open("user_jvm_args.txt", "w") as f:
         f.write(f"-Xms1G\n-Xmx{RAM}\n")
 
+def version_k(mc_version, forge_version):
+    with open("version_k", "w+") as f:
+        f.write(f"{mc_version}\n-Xmx{forge_version}\n")
+
 
 def start_server():
     print("Starting Forge server...")
@@ -91,6 +95,8 @@ def main():
     installer = download_installer(mc_version, forge_version)
     install_if_needed(installer)
     accept_eula()
+    args_update()
+    version_k(mc_version, forge_version)
     start_server()
 
 

@@ -12,4 +12,4 @@ WORKDIR /app/data
 EXPOSE 25565
 
 #----- Run -----
-CMD ["ls", "/app/"]
+CMD ["python", "/app/start_server.py"]

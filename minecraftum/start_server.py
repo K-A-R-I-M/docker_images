@@ -76,6 +76,48 @@ def version_k(mc_version, forge_version):
     with open("version_k", "w+") as f:
         f.write(f"{mc_version}\n{forge_version}\n")
 
+import zipfile
+import shutil
+
+def manage_mods():
+    """
+    Ensures mods folder exists and extracts /opt/mine/mods.zip
+    into mods/ if present. Safe to run multiple times.
+    """
+
+    mods_dir = "mods"
+    zip_path = "/opt/minecraftum/mods.zip"
+    marker_file = ".mods_extracted"
+
+    # Create mods directory if missing
+    os.makedirs(mods_dir, exist_ok=True)
+
+    # If no zip file provided, skip silently
+    if not os.path.exists(zip_path):
+        print("No mods.zip found at /opt/mine. Skipping mod setup.")
+        return
+
+    # If already extracted, skip
+    if os.path.exists(os.path.join(mods_dir, marker_file)):
+        print("Mods already extracted. Skipping.")
+        return
+
+    print("Extracting mods.zip into mods/ ...")
+
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(mods_dir)
+
+        # Create marker to avoid re-extracting every time
+        with open(os.path.join(mods_dir, marker_file), "w") as f:
+            f.write("ok")
+
+        print("Mods installed successfully.")
+
+    except zipfile.BadZipFile:
+        print("ERROR: mods.zip is not a valid zip file.")
+        raise
+
 
 def start_server():
     print("Starting Forge server...")

@@ -86,8 +86,13 @@ def start_server():
 def main():
     print("Fetching latest versions...")
 
-    mc_version = get_latest_mc()
-    forge_version = get_latest_forge(mc_version)
+    # Lock version tempo
+    # mc_version = get_latest_mc()
+    # forge_version = get_latest_forge(mc_version)
+
+    mc_version = "1.21.8"
+    forge_version = "58.1.0"
+
 
     print(f"Minecraft version: {mc_version}")
     print(f"Forge version: {forge_version}")

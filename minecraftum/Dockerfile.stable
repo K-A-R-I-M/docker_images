@@ -1,15 +1,14 @@
 FROM docker.io/library/eclipse-temurin:21-jre-alpine
 
 #----- Setup minecraft serv -----
-WORKDIR /app
+WORKDIR /app/data
 
 COPY requirements.txt start_server.py mods/mods.zip ./
 
 RUN apk add --no-cache python3 py3-requests
 RUN mkdir data
-WORKDIR /app/data
 
 EXPOSE 25565
 
 #----- Run -----
-CMD ["python", "/app/start_server.py"]
+CMD ["python", "/app/data/start_server.py"]

@@ -78,44 +78,51 @@ def version_k(mc_version, forge_version):
     with open("version_k", "w+") as f:
         f.write(f"{mc_version}\n{forge_version}\n")
 
-
-def manage_mods():
+def manage_mods(mods_dir="/app/mods", zip_path="/app/mods.zip"):
     """
-    Ensures mods folder exists and extracts /opt/mine/mods.zip
-    into mods/ if present. Safe to run multiple times.
+    Ensures the mods directory exists and extracts mods.zip into it.
+    Uses a marker file to avoid repeated extraction.
+    
+    Parameters:
+    - mods_dir: Path to mods directory
+    - zip_path: Path to mods.zip
     """
-
-    mods_dir = "mods"
-    zip_path = "/app/mods.zip"
     marker_file = ".mods_extracted"
+    marker_path = os.path.join(mods_dir, marker_file)
 
     # Create mods directory if missing
     os.makedirs(mods_dir, exist_ok=True)
 
-    # If no zip file provided, skip silently
-    if not os.path.exists(zip_path):
-        print("No mods.zip found at /opt/mine. Skipping mod setup.")
+    # Skip if zip file doesn't exist
+    if not os.path.isfile(zip_path):
+        print(f"No mods.zip found at {zip_path}. Skipping mod setup.")
         return
 
-    # If already extracted, skip
-    if os.path.exists(os.path.join(mods_dir, marker_file)):
+    # Skip if already extracted
+    if os.path.exists(marker_path):
         print("Mods already extracted. Skipping.")
         return
 
-    print("Extracting mods.zip into mods/ ...")
+    print(f"Extracting {zip_path} into {mods_dir} ...")
 
     try:
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(mods_dir)
 
-        # Create marker to avoid re-extracting every time
-        with open(os.path.join(mods_dir, marker_file), "w") as f:
+        # Create marker to prevent future extraction
+        with open(marker_path, "w") as f:
             f.write("ok")
 
         print("Mods installed successfully.")
 
     except zipfile.BadZipFile:
-        print("ERROR: mods.zip is not a valid zip file.")
+        print(f"ERROR: {zip_path} is not a valid zip file.")
+        raise
+    except PermissionError:
+        print(f"ERROR: Permission denied when writing to {mods_dir}.")
+        raise
+    except Exception as e:
+        print(f"ERROR: Unexpected error: {e}")
         raise
 
 

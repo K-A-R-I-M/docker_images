@@ -7,7 +7,7 @@ import zipfile
 import shutil
 
 JAVA = "java"
-RAM = os.environ.get("RAM", "8G")
+RAM = os.environ.get("RAM", "12G")
 
 MC_MANIFEST = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
 FORGE_PROMO = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"

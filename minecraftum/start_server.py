@@ -2,8 +2,8 @@ import os
 import subprocess
 import urllib.request
 
-SERVER_DIR = "/opt/mine"
-MODS_ZIP = "/opt/mine/mods.zip"
+SERVER_DIR = "/app/data"
+MODS_ZIP = "/app/data/mods.zip"
 
 NEOFORGE_VERSION = "21.8.52" # 1.21.8
 INSTALLER_URL = f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{NEOFORGE_VERSION}/neoforge-{NEOFORGE_VERSION}-installer.jar"

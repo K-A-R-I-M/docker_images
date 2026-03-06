@@ -5,7 +5,7 @@ import os
 import glob
 
 JAVA = "java"
-RAM = "4G"
+RAM = "12G"
 
 MC_VERSION = "1.20.1"
 FORGE_VERSION = "47.2.0"

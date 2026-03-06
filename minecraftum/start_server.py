@@ -62,15 +62,9 @@ def manage_mods():
 
 
 def start_server():
-    print("Starting server...")
-
-    run(f"""
-    cd {SERVER_DIR} &&
-    java -Xms4G -Xmx6G \
-    @user_jvm_args.txt \
-    @libraries/net/neoforged/neoforge/*/unix_args.txt \
-    nogui
-    """)
+    print("Starting Forge server...")
+    # Use sh explicitly (important in Alpine/Docker)
+    subprocess.run(["sh", "./run.sh"], check=True)
 
 
 def main():

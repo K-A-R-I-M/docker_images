@@ -1,0 +1,13 @@
+[provider]
+default_provider = "deepseek"
+
+[display]
+centered = true
+
+[keybindings]
+side_panel_toggle = "alt+m"
+new_terminal = "alt+enter"
+
+[features]
+memory = true
+swarm = true

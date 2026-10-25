@@ -10,3 +10,10 @@ new_terminal = "alt+enter"
 [features]
 memory = true
 swarm = true
+
+[agents]
+swarm_model = "inherit"
+swarm_spawn_mode = "headless"
+# Hard cap, not a target. Spawn one worker per independent lane.
+# 6-8 is the practical ceiling for build/test lanes; up to 20 for I/O-bound lanes.
+swarm_max_concurrent_agents = 20

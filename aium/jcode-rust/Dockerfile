@@ -20,26 +20,9 @@ RUN curl -fsSL https://jcode.sh/install -o /tmp/jcode-install.sh \
     && bash /tmp/jcode-install.sh \
     && rm -f /tmp/jcode-install.sh 
 
-# --- Skills: emilkowalski ----------------------------------------------------
-ARG EK_SKILLS_REF=main
-RUN mkdir -p /root/.jcode/skills \
-    && git clone --depth 1 --single-branch --branch "${EK_SKILLS_REF}" \
-        https://github.com/emilkowalski/skills.git /tmp/ek-skills \
-    && cp -a /tmp/ek-skills/skills/. /root/.jcode/skills/ \
-    && rm -rf /tmp/ek-skills
-
-# --- Skills: addyosmani ------------------------------------------------------
-ARG AGENT_SKILLS_REF=main
-RUN mkdir -p /root/.jcode/skills \
-    && git clone --depth 1 --single-branch --branch "${AGENT_SKILLS_REF}" \
-        https://github.com/addyosmani/agent-skills.git /tmp/agent-skills \
-    && cp -a /tmp/agent-skills/skills/. /root/.jcode/skills/ \
-    && rm -rf /tmp/agent-skills
-
 # --- Configuration -----------------------------------------------------------
-# Global jcode instructions live at ~/AGENTS.md (not ~/.jcode/AGENTS.md).
-COPY ./AGENTS.md /root/AGENTS.md
-COPY ./config.toml /root/.jcode/config.toml
+COPY --from=docker.io/k4rim/aium:jcode /root/.jcode/ /root/.jcode/
+COPY --from=docker.io/k4rim/aium:jcode /root/AGENTS.md /root/AGENTS.md
 
 WORKDIR /appum
 

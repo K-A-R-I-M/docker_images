@@ -36,10 +36,36 @@ RUN mkdir -p /root/.jcode/skills \
     && cp -a /tmp/agent-skills/skills/. /root/.jcode/skills/ \
     && rm -rf /tmp/agent-skills
 
+# --- Skills: ponytail --------------------------------------------------------
+ARG PONYTAIL_REF=main
+RUN mkdir -p /root/.jcode/skills \
+    && git clone --depth 1 --single-branch --branch "${PONYTAIL_REF}" \
+        https://github.com/DietrichGebert/ponytail.git /tmp/ponytail \
+    && cp -a /tmp/ponytail/.openclaw/skills/ponytail /root/.jcode/skills/ponytail \
+    && rm -rf /tmp/ponytail
+
+# --- Skills: caveman ---------------------------------------------------------
+ARG CAVEMAN_REF=main
+RUN mkdir -p /root/.jcode/skills \
+    && git clone --depth 1 --single-branch --branch "${CAVEMAN_REF}" \
+        https://github.com/JuliusBrussee/caveman.git /tmp/caveman \
+    && cp -a /tmp/caveman/skills/caveman /root/.jcode/skills/caveman \
+    && rm -rf /tmp/caveman
+
+# --- Skills: impeccable ---------------------------------------------------------
+ARG IMPECCABLE_REF=main
+RUN mkdir -p /root/.jcode/skills \
+    && git clone --depth 1 --single-branch --branch "${IMPECCABLE_REF}" \
+        https://github.com/pbakaus/impeccable /tmp/impeccable \
+    && cp -a /tmp/impeccable/.agent/skills/impeccable /root/.jcode/skills/impeccable \
+    && rm -rf /tmp/impeccable
+
 # --- Configuration -----------------------------------------------------------
 # Global jcode instructions live at ~/AGENTS.md (not ~/.jcode/AGENTS.md).
 COPY ./AGENTS.md /root/AGENTS.md
 COPY ./config.toml /root/.jcode/config.toml
+# Add MCP servers (Figma, etc...)
+COPY ./mcp.json /root/.jcode/mcp.json
 
 WORKDIR /appum
 

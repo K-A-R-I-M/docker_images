@@ -1,12 +1,12 @@
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("build", "push", "run")]
+    [ValidateSet("build", "build-all", "push", "push-all", "run")]
     [string]$Command = "build",
     [Parameter(Position = 1)]
-    [ValidateSet("aium")]
+    [ValidateSet("aium", "aium-jcode")]
     [string]$Image = "aium",
     [Parameter(Position = 2)]
-    [ValidateSet("jcode", "jcode-rust", "jcode-node", "opencode")]
+    [ValidateSet("jcode", "jcode-rust", "jcode-node", "jcode-remotion", "opencode")]
     [string]$Tag = "jcode",
     [Parameter(Position = 3)]
     [string]$Deepseek_api_key = ""
@@ -26,6 +26,28 @@ switch ($Command) {
             -v "$(Get-Location):/appum" `
             -e DEEPSEEK_API_KEY="$($Deepseek_api_key)" `
             "docker.io/k4rim/$($Image):$($Tag)"
+    }
+    "build-all"{
+        switch ($Image) {
+            "aium-jcode" { 
+                   .\run.ps1 build aium jcode-node; 
+                   .\run.ps1 build aium jcode; 
+                   .\run.ps1 build aium jcode-rust;
+                   .\run.ps1 build aium jcode-remotion;
+            }
+            Default {}
+        }    
+    }
+    "push-all"{
+        switch ($Image) {
+            "aium-jcode" { 
+                   .\run.ps1 push aium jcode-node; 
+                   .\run.ps1 push aium jcode; 
+                   .\run.ps1 push aium jcode-rust;
+                   .\run.ps1 push aium jcode-remotion;
+            }
+            Default {}
+        }    
     }
     Default {}
 }

@@ -41,46 +41,107 @@
     font-size: 15px;
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
-    display: flex;
-    justify-content: center;
-    overflow-x: hidden;
+    overflow: hidden;
   }
-  body.drawer-open { overflow: hidden; }
-  main {
-    width: min(440px, 100%);
-    min-height: 100dvh;
-    padding: max(18px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+  button, input, select { font: inherit; color: inherit; }
+  h2 {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
   }
-  header { display: flex; align-items: center; justify-content: space-between; }
-  .brand { font-weight: 600; letter-spacing: .01em; }
-  .chips { display: flex; gap: 6px; align-items: center; }
+  .app { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+
+  /* top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .brand { font-weight: 650; letter-spacing: .01em; margin-right: 4px; }
+  .spacer { flex: 1; }
   .chip {
     appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     border: 1px solid var(--line);
     background: transparent;
     color: var(--muted);
     border-radius: 999px;
-    min-height: 32px;
+    min-height: 30px;
     padding: 0 10px;
-    font: inherit;
     font-size: 12px;
+    white-space: nowrap;
+  }
+  button.chip { cursor: pointer; transition: color 140ms ease, border-color 140ms ease; }
+  button.chip:hover { color: var(--fg); border-color: var(--muted); }
+  .chip.mono { font-variant-numeric: tabular-nums; }
+  #stateChip[data-state="listening"], #stateChip[data-state="speaking"] { color: var(--accent); border-color: var(--accent); }
+  #stateChip[data-state="thinking"] { color: var(--fg); }
+  #stateChip[data-state="error"] { color: var(--amber); border-color: var(--amber); }
+  .dots { display: flex; gap: 4px; align-items: center; }
+  .dot {
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    transition: transform 140ms var(--ease), border-color 140ms ease, color 140ms ease;
+    display: grid;
+    place-items: center;
+    transition: color 140ms ease, border-color 140ms ease;
   }
-  .chip:hover { color: var(--fg); border-color: var(--muted); }
-  .chip:active { transform: scale(.97); }
-  .chip:focus-visible, .orb:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+  .dot[data-ok="true"] { color: var(--accent); border-color: var(--accent); }
+  .dot[data-ok="false"] { color: var(--amber); border-color: var(--amber); }
+  .dot:hover { border-color: var(--muted); }
+
+  /* shell */
+  .workspace {
+    width: 100%;
+    max-width: 1720px;
+    margin: 0 auto;
+    padding: 14px 18px 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 14px;
+    min-height: 0;
   }
-  .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 8px 0; }
+  .workspace > .banner { grid-column: 1 / -1; }
+  .main { display: grid; grid-template-rows: minmax(0, 1fr) 300px; gap: 14px; min-height: 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+
+  /* now */
+  .now { display: grid; grid-template-columns: 196px minmax(0, 1fr); min-height: 0; overflow: hidden; }
+  .voice-pane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 14px;
+    border-right: 1px solid var(--line);
+    text-align: center;
+  }
+  .orb-wrap { position: relative; width: 112px; height: 112px; display: grid; place-items: center; }
+  .level { position: absolute; inset: 0; transform: rotate(-90deg); pointer-events: none; }
+  .level circle { fill: none; stroke-width: 3; }
+  .level-track { stroke: var(--line); }
+  .level-fill { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 80ms linear; }
   .orb {
     position: relative;
-    width: 112px;
-    height: 112px;
+    width: 92px;
+    height: 92px;
     border-radius: 50%;
     border: 1px solid var(--line);
     background: var(--surface);
@@ -88,137 +149,63 @@
     display: grid;
     place-items: center;
     cursor: pointer;
-    box-shadow: var(--shadow);
     transition: transform 160ms var(--ease), border-color 200ms ease, background 200ms ease;
     touch-action: manipulation;
   }
   .orb:active { transform: scale(.97); }
-  .orb svg { width: 34px; height: 34px; }
-  .orb::after {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: 50%;
-    border: 1px solid var(--accent);
-    opacity: 0;
-    pointer-events: none;
-  }
+  .orb svg { width: 30px; height: 30px; }
   body[data-state="listening"] .orb { border-color: var(--accent); }
-  body[data-state="listening"] .orb::after { animation: ring 2.4s var(--ease) infinite; }
   body[data-state="speaking"] .orb { border-color: var(--accent); background: var(--accent-soft); }
   body[data-state="thinking"] .orb::before {
     content: "";
     position: absolute;
-    inset: 7px;
+    inset: 6px;
     border-radius: 50%;
     border: 2px solid transparent;
     border-top-color: var(--accent);
     animation: spin 1.1s linear infinite;
   }
   body[data-state="error"] .orb { border-color: var(--amber); }
-  @keyframes ring {
-    0% { transform: scale(1); opacity: .55; }
-    70%, 100% { transform: scale(1.18); opacity: 0; }
-  }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .status { font-size: 15px; color: var(--muted); min-height: 22px; }
-  .activity { font-size: 12px; color: var(--muted); min-height: 18px; font-variant-numeric: tabular-nums; }
-  .exchange { flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; justify-content: flex-end; min-height: 86px; }
-  .user { color: var(--muted); font-size: 13px; min-height: 18px; }
-  .reply {
-    font-size: 16px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    min-height: 22px;
-  }
-  .footer {
+  .status { font-size: 14px; color: var(--muted); min-height: 20px; }
+  .activity { font-size: 12px; color: var(--muted); min-height: 17px; font-variant-numeric: tabular-nums; }
+  .voice-pane .act { width: 100%; }
+
+  .convo-pane { display: flex; flex-direction: column; min-height: 0; }
+  .transcript { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { max-width: 78ch; }
+  .msg .who { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .msg .body { font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.user .body { color: var(--muted); }
+  .msg.jarvis .body { font-size: 15px; }
+  .empty { color: var(--muted); font-size: 13px; margin: auto 0; max-width: 44ch; }
+  .breakdown {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 10px;
-    color: var(--muted);
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
+    gap: 4px 16px;
+    padding: 8px 16px;
     border-top: 1px solid var(--line);
-    padding-top: 10px;
-    cursor: pointer;
-    min-height: 32px;
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    min-height: 33px;
     align-items: center;
   }
-  .footer:hover { color: var(--fg); }
-  .privacy { margin: 0; color: var(--muted); font-size: 11px; text-align: center; }
-  .banner {
-    display: none;
-    border: 1px solid var(--amber);
-    color: var(--amber);
-    border-radius: 10px;
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-  .banner[data-show="true"] { display: block; }
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, .32);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 200ms ease;
-    z-index: 10;
-  }
-  .backdrop[data-open="true"] { opacity: 1; pointer-events: auto; }
-  .drawer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    max-height: 84dvh;
-    overflow-y: auto;
-    background: var(--surface);
-    border-top: 1px solid var(--line);
-    border-radius: 18px 18px 0 0;
-    padding: 16px 18px calc(20px + env(safe-area-inset-bottom));
-    transform: translateY(100%);
-    transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
-    z-index: 20;
-    box-shadow: 0 -8px 30px rgba(0, 0, 0, .12);
-  }
-  .drawer[data-open="true"] { transform: translateY(0); }
-  @media (min-width: 720px) {
-    .drawer {
-      top: 0;
-      left: auto;
-      width: 360px;
-      max-height: none;
-      border-radius: 0;
-      border-left: 1px solid var(--line);
-      border-top: 0;
-      transform: translateX(100%);
-      box-shadow: none;
-    }
-    .drawer[data-open="true"] { transform: translateX(0); }
-  }
-  .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .drawer h2 { font-size: 13px; font-weight: 600; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-  .drawer h2:first-of-type { margin-top: 4px; }
-  .row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 13px; }
-  .row .k { color: var(--muted); }
-  .row .v { text-align: right; font-variant-numeric: tabular-nums; word-break: break-word; }
-  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
-  select, input {
-    font: inherit;
+  .breakdown b { font-weight: 600; color: var(--fg); margin-right: 3px; }
+  .composer { display: flex; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--line); }
+  .composer input { flex: 1; min-width: 0; }
+
+  /* controls */
+  select, input[type="text"], input[type="password"], input:not([type]) {
     font-size: 13px;
-    color: var(--fg);
     background: var(--bg);
     border: 1px solid var(--line);
     border-radius: 8px;
     min-height: 34px;
     padding: 0 8px;
   }
-  select { flex: 1; min-width: 0; }
-  button.act {
+  .act {
     appearance: none;
-    font: inherit;
     font-size: 13px;
     min-height: 34px;
     padding: 0 12px;
@@ -228,125 +215,300 @@
     color: var(--fg);
     cursor: pointer;
     transition: transform 140ms var(--ease), border-color 140ms ease;
+    white-space: nowrap;
   }
-  button.act:hover { border-color: var(--muted); }
-  button.act:active { transform: scale(.97); }
-  button.act.primary { border-color: var(--accent); color: var(--accent); }
-  button.act.danger { color: var(--amber); }
-  .hint { font-size: 12px; color: var(--muted); margin: 6px 0; }
-  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
-  .pill { font-size: 11px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--muted); }
+  .act:hover { border-color: var(--muted); }
+  .act:active { transform: scale(.97); }
+  .act:disabled { opacity: .4; cursor: default; }
+  .act.primary { border-color: var(--accent); color: var(--accent); }
+  .act.danger { color: var(--amber); }
+  .act.tiny { min-height: 26px; padding: 0 8px; font-size: 12px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* tabs */
+  .tabs-card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .tablist { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 8px 10px 9px;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--fg); }
+  .tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+  .tabpanel { padding: 14px 16px; overflow-y: auto; min-height: 0; flex: 1; }
+  .tabpanel[hidden] { display: none; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 14px; }
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+  .field > select, .field > input { width: 100%; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .hint { font-size: 12px; color: var(--muted); margin: 0; }
+  .rows { display: grid; gap: 3px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+  .row .k { color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .row .v { text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .statrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .stat .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .stat .v { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .pill { display: inline-block; font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; color: var(--muted); }
   .pill.ok { color: var(--accent); border-color: var(--accent); }
   .pill.bad { color: var(--amber); border-color: var(--amber); }
-  .events { font-size: 12px; color: var(--muted); display: grid; gap: 4px; max-height: 160px; overflow: auto; }
-  .events div { font-variant-numeric: tabular-nums; }
+  .chart { display: flex; align-items: flex-end; gap: 8px; height: 92px; padding: 4px 0 0; }
+  .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; height: 100%; }
+  .bar .fill { width: 100%; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 3px; min-height: 2px; }
+  .bar .lbl { font-size: 11px; color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 600; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  td { padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  td.num, th.num { text-align: right; }
+  .fact-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+  .fact-list li { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
+  .fact-list .text { font-size: 13px; overflow-wrap: anywhere; }
+  .meter { width: 90px; height: 4px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 80ms linear; }
+  .diag { font-size: 12px; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px; display: grid; gap: 2px; }
+  .diag .row .v { font-variant-numeric: normal; }
+
+  /* rail */
+  .rail { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 14px; min-height: 0; }
+  .rail-card { padding: 12px 14px; min-height: 0; display: flex; flex-direction: column; }
+  .feed { overflow-y: auto; min-height: 0; display: grid; gap: 6px; align-content: start; font-size: 12px; }
+  .feed .ev { color: var(--muted); overflow-wrap: anywhere; }
+  .feed .ev[data-level="warn"] { color: var(--amber); }
+  .feed .ev[data-level="error"] { color: var(--amber); font-weight: 600; }
+  .feed .ev time { font-variant-numeric: tabular-nums; opacity: .8; margin-right: 6px; }
+  .privacy { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+  .banner {
+    display: none;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .banner[data-show="true"] { display: block; }
+
+  /* log list */
+  .log-list { display: grid; gap: 2px; font-size: 12px; margin-top: 10px; max-height: 180px; overflow: auto; }
+  .log-list div { font-variant-numeric: tabular-nums; color: var(--muted); overflow-wrap: anywhere; }
+  .log-list div[data-level="error"] { color: var(--amber); font-weight: 600; }
+  .log-list div[data-level="warn"] { color: var(--amber); }
+
+  @media (max-width: 1100px) {
+    .workspace { grid-template-columns: minmax(0, 1fr) 280px; }
+    .now { grid-template-columns: 168px minmax(0, 1fr); }
+  }
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    .app { height: auto; }
+    .workspace { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+    .main { grid-template-rows: auto auto; }
+    .now { grid-template-columns: 1fr; }
+    .voice-pane { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; justify-content: flex-start; text-align: left; }
+    .voice-pane .act { width: auto; }
+    .transcript { max-height: 45vh; min-height: 180px; }
+    .rail { grid-template-rows: auto auto auto; }
+    .feed { max-height: 240px; }
+    .tabs-card { min-height: 300px; }
+  }
+  @media (max-width: 600px) {
+    .topbar { padding: 8px 12px; gap: 6px; }
+    .chip { min-height: 28px; font-size: 12px; padding: 0 8px; }
+    .tabpanel { padding: 12px; }
+    .breakdown { gap: 2px 10px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
   }
 </style>
 </head>
 <body data-state="idle">
-<main>
-  <header>
+<div class="app">
+  <header class="topbar">
     <div class="brand">Jarvis</div>
-    <div class="chips">
-      <button id="langChip" class="chip" aria-label="Language">Auto</button>
-      <button id="infoBtn" class="chip" aria-label="Details">Info</button>
+    <span id="stateChip" class="chip" data-state="idle">Ready</span>
+    <button id="sessionBtn" class="act primary" aria-label="Start session">Start</button>
+    <span id="topBrain" class="chip mono" title="Brain">—</span>
+    <span id="topSpend" class="chip mono" title="Cloud spend today">$0.00</span>
+    <span class="spacer"></span>
+    <div class="dots" aria-label="Subsystem health">
+      <button class="dot" id="dotWhisper" data-key="whisper" aria-label="Whisper status">W</button>
+      <button class="dot" id="dotPiper" data-key="piper" aria-label="Piper status">P</button>
+      <button class="dot" id="dotJcode" data-key="jcode" aria-label="jcode status">J</button>
+      <button class="dot" id="dotDb" data-key="db" aria-label="Database status">D</button>
     </div>
+    <button id="langChip" class="chip" aria-label="Language, click to cycle">Auto</button>
   </header>
 
-  <div id="banner" class="banner" role="alert"></div>
+  <div class="workspace">
+    <div id="banner" class="banner" role="alert"></div>
 
-  <section class="stage">
-    <button id="orb" class="orb" aria-label="Start session">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
-        <path d="M5 11a7 7 0 0 0 14 0"/>
-        <path d="M12 18v3"/>
-        <path d="M9 21h6"/>
-      </svg>
-    </button>
-    <div id="status" class="status" aria-live="polite">Ready</div>
-    <div id="activity" class="activity" aria-live="polite"></div>
-  </section>
+    <div class="main">
+      <section class="card now" aria-label="Now">
+        <div class="voice-pane">
+          <div class="orb-wrap">
+            <svg class="level" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="level-track" cx="60" cy="60" r="54"></circle>
+              <circle id="levelRing" class="level-fill" cx="60" cy="60" r="54" stroke-dasharray="339.3" stroke-dashoffset="339.3"></circle>
+            </svg>
+            <button id="orb" class="orb" aria-label="Start session">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
+                <path d="M5 11a7 7 0 0 0 14 0"/>
+                <path d="M12 18v3"/>
+                <path d="M9 21h6"/>
+              </svg>
+            </button>
+          </div>
+          <div id="status" class="status" aria-live="polite">Ready</div>
+          <div id="activity" class="activity" aria-live="polite"></div>
+          <button id="cancelBtn" class="act danger" hidden>Cancel turn</button>
+        </div>
 
-  <section class="exchange" aria-live="polite">
-    <div id="userLine" class="user"></div>
-    <div id="replyLine" class="reply"></div>
-  </section>
+        <div class="convo-pane">
+          <div id="transcript" class="transcript" role="log" aria-live="off" aria-label="Conversation"></div>
+          <div id="breakdown" class="breakdown" aria-label="Last turn"></div>
+          <div class="composer">
+            <input id="textInput" type="text" autocomplete="off" placeholder="Type a message instead of speaking" aria-label="Type a message">
+            <button id="sendText" class="act primary">Send</button>
+          </div>
+        </div>
+      </section>
 
-  <footer id="footer" class="footer" tabindex="0" role="button" aria-label="Open details">
-    <span id="model">—</span>
-    <span id="latency"></span>
-    <span id="tokens"></span>
-    <span id="cost"></span>
-    <span id="facts"></span>
-  </footer>
-  <p class="privacy">Audio stays on this device. Cloud gets text only.</p>
-</main>
+      <section class="card tabs-card" aria-label="Details">
+        <div class="tablist" role="tablist" aria-label="Detail sections">
+          <button class="tab" id="tab-brain" role="tab" data-tab="brain" aria-selected="true" aria-controls="panel-brain">Brain</button>
+          <button class="tab" id="tab-voice" role="tab" data-tab="voice" aria-selected="false" aria-controls="panel-voice" tabindex="-1">Voice</button>
+          <button class="tab" id="tab-memory" role="tab" data-tab="memory" aria-selected="false" aria-controls="panel-memory" tabindex="-1">Memory</button>
+          <button class="tab" id="tab-cost" role="tab" data-tab="cost" aria-selected="false" aria-controls="panel-cost" tabindex="-1">Cost</button>
+          <button class="tab" id="tab-system" role="tab" data-tab="system" aria-selected="false" aria-controls="panel-system" tabindex="-1">System</button>
+          <button class="tab" id="tab-logs" role="tab" data-tab="logs" aria-selected="false" aria-controls="panel-logs" tabindex="-1">Logs</button>
+        </div>
 
-<div id="backdrop" class="backdrop" data-open="false"></div>
-<aside id="drawer" class="drawer" data-open="false" aria-hidden="true" aria-label="Details">
-  <div class="drawer-head">
-    <strong>Details</strong>
-    <button id="drawerClose" class="chip" aria-label="Close details">Close</button>
+        <div id="panel-brain" class="tabpanel" role="tabpanel" aria-labelledby="tab-brain">
+          <div class="grid2">
+            <label class="field">Provider<select id="provider" aria-label="Provider"></select></label>
+            <label class="field">Model<select id="modelSel" aria-label="Model"></select></label>
+          </div>
+          <div class="controls">
+            <button id="applyBrain" class="act primary">Apply</button>
+            <button id="testBrain" class="act">Test</button>
+            <span id="brainStatus" class="hint"></span>
+          </div>
+          <div class="rows" style="margin-top:12px">
+            <div class="row"><span class="k">Fallback chain</span><span id="brainFallback" class="v">—</span></div>
+          </div>
+        </div>
+
+        <div id="panel-voice" class="tabpanel" role="tabpanel" aria-labelledby="tab-voice" hidden>
+          <div class="grid2">
+            <label class="field">Default language
+              <select id="langSel" aria-label="Default language">
+                <option value="auto">Auto detect</option>
+                <option value="en">English</option>
+                <option value="fr">French</option>
+              </select>
+            </label>
+            <label class="field">Speech output
+              <select id="ttsSel" aria-label="Speech output">
+                <option value="on">Speak replies</option>
+                <option value="off">Text only</option>
+              </select>
+            </label>
+            <label class="field">English voice<input id="voiceEn" type="text" placeholder="default" aria-label="English voice name"></label>
+            <label class="field">French voice<input id="voiceFr" type="text" placeholder="default" aria-label="French voice name"></label>
+          </div>
+          <div class="controls">
+            <button id="saveVoice" class="act primary">Save</button>
+            <span id="voiceStatus" class="hint"></span>
+          </div>
+          <div class="rows" style="margin-top:12px">
+            <div class="row"><span class="k">Whisper model</span><span id="voiceModel" class="v">—</span></div>
+            <div class="row"><span class="k">Profile</span><span id="voiceProfile" class="v">—</span></div>
+            <div class="row"><span class="k">Microphone</span><select id="micSel" aria-label="Microphone device" style="max-width:60%"></select></div>
+            <div class="row"><span class="k">Input level</span><span class="meter" aria-hidden="true"><span id="micBar"></span></span></div>
+          </div>
+          <div id="micDiag" class="diag"></div>
+        </div>
+
+        <div id="panel-memory" class="tabpanel" role="tabpanel" aria-labelledby="tab-memory" hidden>
+          <div class="controls">
+            <input id="newFact" type="text" placeholder="Add a fact, e.g. my sister is Ana" aria-label="New fact" style="flex:1;min-width:180px">
+            <button id="addFact" class="act primary">Add</button>
+            <button id="exportFacts" class="act">Export</button>
+            <button id="forgetAll" class="act danger">Forget all</button>
+          </div>
+          <p id="memoryStatus" class="hint"></p>
+          <ul id="factList" class="fact-list"></ul>
+        </div>
+
+        <div id="panel-cost" class="tabpanel" role="tabpanel" aria-labelledby="tab-cost" hidden>
+          <div class="statrow">
+            <div class="stat"><div class="k">Today</div><div class="v" id="costToday">—</div></div>
+            <div class="stat"><div class="k">Session</div><div class="v" id="costSession">—</div></div>
+            <div class="stat"><div class="k">Last turn</div><div class="v" id="costLast">—</div></div>
+          </div>
+          <h2>Last 7 days</h2>
+          <div id="costChart" class="chart" aria-label="Cost per day, last 7 days"></div>
+          <h2 style="margin-top:14px">Recent turns</h2>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Time</th><th>Model</th><th class="num">Total</th><th class="num">Tokens</th><th class="num">Cost</th></tr></thead>
+              <tbody id="costTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="panel-system" class="tabpanel" role="tabpanel" aria-labelledby="tab-system" hidden>
+          <div id="sysRows" class="rows"></div>
+          <div class="controls">
+            <button id="exportAll" class="act">Export all data</button>
+          </div>
+          <h2 style="margin-top:14px">Access token</h2>
+          <div class="controls">
+            <input id="tokenInput" type="password" autocomplete="off" placeholder="Only if configured" aria-label="Access token" style="flex:1;min-width:180px">
+            <button id="saveToken" class="act">Save</button>
+          </div>
+          <p class="hint">Used only when the server sets JARVIS_TOKEN.</p>
+        </div>
+
+        <div id="panel-logs" class="tabpanel" role="tabpanel" aria-labelledby="tab-logs" hidden>
+          <div class="controls">
+            <select id="logLevel" aria-label="Filter by level">
+              <option value="all">All levels</option>
+              <option value="error">Errors</option>
+              <option value="warn">Warnings</option>
+              <option value="info">Info</option>
+            </select>
+            <button id="refreshLogs" class="act">Refresh</button>
+            <button id="copyLogs" class="act">Copy</button>
+            <span id="logStatus" class="hint"></span>
+          </div>
+          <div id="logList" class="log-list"></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="rail">
+      <section class="card rail-card" aria-label="Health">
+        <h2>Health</h2>
+        <div id="healthRows" class="rows"></div>
+      </section>
+      <section class="card rail-card" aria-label="Live activity">
+        <h2>Live</h2>
+        <div id="eventFeed" class="feed" role="log" aria-live="off"></div>
+      </section>
+      <p class="privacy">Audio stays on this device. Cloud gets text only.</p>
+    </aside>
   </div>
-
-  <h2>Brain</h2>
-  <div class="controls">
-    <select id="provider" aria-label="Provider"></select>
-    <select id="modelSel" aria-label="Model"></select>
-  </div>
-  <div class="controls">
-    <button id="applyBrain" class="act primary">Apply</button>
-    <button id="testBrain" class="act">Test</button>
-  </div>
-  <div id="brainStatus" class="hint"></div>
-
-  <h2>Session</h2>
-  <div class="row"><span class="k">State</span><span id="statState" class="v">—</span></div>
-  <div class="row"><span class="k">Turns</span><span id="statTurns" class="v">—</span></div>
-  <div class="row"><span class="k">Language</span><span id="statLang" class="v">—</span></div>
-  <div class="row"><span class="k">Profile</span><span id="statProfile" class="v">—</span></div>
-  <div class="row"><span class="k">ID</span><span id="statId" class="v">—</span></div>
-
-  <h2>Cost</h2>
-  <div class="row"><span class="k">Last turn</span><span id="statTurnCost" class="v">—</span></div>
-  <div class="row"><span class="k">Session</span><span id="statCost" class="v">—</span></div>
-  <div class="row"><span class="k">Today</span><span id="statSpend" class="v">—</span></div>
-  <div class="row"><span class="k">Balance</span><span id="statBalance" class="v">—</span></div>
-  <div class="hint">Local speech is free. Only cloud tokens are billed.</div>
-
-  <h2>Speech</h2>
-  <div class="pills">
-    <span id="healthWhisper" class="pill">whisper</span>
-    <span id="healthPiper" class="pill">piper</span>
-    <span id="healthJcode" class="pill">jcode</span>
-    <span id="healthDb" class="pill">db</span>
-  </div>
-
-  <h2>Memory</h2>
-  <div class="row"><span class="k">Facts</span><span id="statFacts" class="v">—</span></div>
-  <div class="controls">
-    <button id="forgetAll" class="act danger">Forget all</button>
-  </div>
-
-  <h2>Type a message</h2>
-  <div class="controls">
-    <input id="textInput" type="text" autocomplete="off" placeholder="Ask Jarvis" style="flex:1">
-    <button id="sendText" class="act">Send</button>
-  </div>
-
-  <h2>Activity</h2>
-  <div id="events" class="events"></div>
-
-  <h2>Access token</h2>
-  <div class="controls">
-    <input id="tokenInput" type="password" autocomplete="off" placeholder="Only if configured" style="flex:1">
-    <button id="saveToken" class="act">Save</button>
-  </div>
-  <div class="hint">Used only when the server sets JARVIS_TOKEN.</div>
-</aside>
+</div>
 
 <script>
 (() => {
@@ -356,11 +518,19 @@
   const SILENCE_FRAMES = 6;
   const MIN_FRAMES = 3;
   const MAX_FRAMES = 120;
+  const RING = 2 * Math.PI * 54;
 
   const state = {
     enabled: false,
-    lang: "auto",
     ui: "idle",
+    lang: "auto",
+    settings: null,
+    status: null,
+    health: null,
+    events: [],
+    turns: [],
+    liveUser: "",
+    liveReply: "",
     ctx: null,
     stream: null,
     source: null,
@@ -379,6 +549,11 @@
     stageTimer: null,
     stageStart: 0,
     lastStage: "",
+    level: 0,
+    deviceId: localStorage.getItem("jarvis_device") || "",
+    lastMicError: "",
+    tab: "brain",
+    pollTimer: null,
   };
 
   const icons = {
@@ -392,8 +567,13 @@
     state.ui = ui;
     document.body.dataset.state = ui;
     $("status").textContent = text;
+    $("stateChip").textContent = text;
+    $("stateChip").dataset.state = ui;
     $("orb").setAttribute("aria-label", ui === "idle" ? "Start session" : "End session");
     $("orb").innerHTML = icons[ui] || icons.idle;
+    $("sessionBtn").textContent = state.enabled ? "Stop" : "Start";
+    $("sessionBtn").setAttribute("aria-label", state.enabled ? "Stop session" : "Start session");
+    $("cancelBtn").hidden = ui !== "thinking";
     if (ui !== "thinking") {
       stopStageTimer();
       $("activity").textContent = "";
@@ -425,6 +605,21 @@
     return n >= 1000 ? (n / 1000).toFixed(1) + "s" : n + "ms";
   }
 
+  function bytes(value) {
+    const n = Number(value || 0);
+    if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
+    if (n >= 1024) return (n / 1024).toFixed(0) + " kB";
+    return n + " B";
+  }
+
+  function uptime(seconds) {
+    const s = Number(seconds || 0);
+    if (s >= 86400) return Math.floor(s / 86400) + "d " + Math.floor((s % 86400) / 3600) + "h";
+    if (s >= 3600) return Math.floor(s / 3600) + "h " + Math.floor((s % 3600) / 60) + "m";
+    if (s >= 60) return Math.floor(s / 60) + "m";
+    return s + "s";
+  }
+
   async function api(path, options = {}) {
     const headers = new Headers(options.headers || {});
     if (state.token) headers.set("Authorization", "Bearer " + state.token);
@@ -434,7 +629,7 @@
     }
     const response = await fetch(path, init);
     if (response.status === 401) {
-      showBanner("Access token needed. Open Info and save it.");
+      showBanner("Access token needed. Open System and save it.");
       throw new Error("Unauthorized");
     }
     if (!response.ok) {
@@ -445,50 +640,109 @@
     return response;
   }
 
-  function updateFooter(done) {
-    const brain = done ? (done.provider || "") + "/" + (done.model || "") : (state.lastDone ? (state.lastDone.provider || "") + "/" + (state.lastDone.model || "") : "—");
-    $("model").textContent = brain;
-    $("latency").textContent = done ? ms(done.timings?.total_ms) : "";
-    $("tokens").textContent = done?.usage ? num((done.usage.input_tokens || 0) + (done.usage.output_tokens || 0)) + " tok" : "";
-    $("cost").textContent = done ? money(done.cost_usd) : "";
-    $("facts").textContent = done ? (done.facts || 0) + " facts" : "";
+  async function download(path, filename) {
+    const response = await api(path);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 
-  function startStageTimer(label) {
-    stopStageTimer();
-    state.stageStart = performance.now();
-    state.lastStage = label || "";
-    const tick = () => {
-      const elapsed = (performance.now() - state.stageStart) / 1000;
-      $("activity").textContent = (state.lastStage || "Thinking") + " " + elapsed.toFixed(1) + "s";
-    };
-    tick();
-    state.stageTimer = setInterval(tick, 100);
+  /* ---------- transcript ---------- */
+
+  function messageEl(role, text, live) {
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + (role === "assistant" ? "jarvis" : role);
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = role === "assistant" ? "Jarvis" : role === "user" ? "You" : role;
+    const body = document.createElement("div");
+    body.className = "body";
+    if (live) body.id = "liveReplyBody";
+    body.textContent = text;
+    wrap.append(who, body);
+    return wrap;
   }
 
-  function stopStageTimer() {
-    if (state.stageTimer) clearInterval(state.stageTimer);
-    state.stageTimer = null;
+  function nearBottom(box) {
+    return box.scrollHeight - box.scrollTop - box.clientHeight < 48;
   }
 
-  function clearActivity() {
-    stopStageTimer();
-    $("activity").textContent = "";
+  function renderTranscript() {
+    const box = $("transcript");
+    const stick = nearBottom(box);
+    box.innerHTML = "";
+    if (!state.turns.length && !state.liveUser && !state.liveReply) {
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "Press Start or Space, then speak. You can also type below.";
+      box.appendChild(empty);
+      return;
+    }
+    state.turns.forEach((turn) => box.appendChild(messageEl(turn.role, turn.text)));
+    if (state.liveUser) box.appendChild(messageEl("user", state.liveUser));
+    if (state.liveReply) box.appendChild(messageEl("assistant", state.liveReply, true));
+    if (stick) box.scrollTop = box.scrollHeight;
   }
 
-  async function startSession() {
+  function updateBreakdown(turn) {
+    const el = $("breakdown");
+    const data = turn || state.lastDone || [...state.turns].reverse().find((t) => t.role === "assistant");
+    if (!data) { el.textContent = ""; return; }
+    const t = data.timings || data;
+    const usage = data.usage || data;
+    const input = usage.input_tokens || 0;
+    const output = usage.output_tokens || 0;
+    const parts = [
+      ["STT", ms(t.stt_ms)],
+      ["first token", ms(t.ttft_ms)],
+      ["total", ms(t.total_ms)],
+      ["tokens", num(input + output)],
+      ["cost", money(data.cost_usd)],
+      ["brain", (data.provider || "—") + "/" + (data.model || "—")],
+    ];
+    el.innerHTML = "";
+    parts.forEach(([key, value]) => {
+      const span = document.createElement("span");
+      const bold = document.createElement("b");
+      bold.textContent = key;
+      span.append(bold, document.createTextNode(value));
+      el.appendChild(span);
+    });
+  }
+
+  /* ---------- mic + session ---------- */
+
+  function setLevel(value) {
+    const level = Math.max(0, Math.min(1, value));
+    state.level = level;
+    const ring = $("levelRing");
+    ring.style.strokeDasharray = String(RING);
+    ring.style.strokeDashoffset = String(RING * (1 - level * 0.92));
+    $("micBar").style.width = Math.round(level * 100) + "%";
+  }
+
+  async function startSession(forceDefault = false) {
     if (state.enabled) return;
     showBanner("");
     if (!window.isSecureContext) {
+      const message = "Browsers allow the microphone only on https:// or localhost. Open this page at http://localhost" + (location.port ? ":" + location.port : "") + " on the server, or serve it over HTTPS.";
+      state.lastMicError = message;
       setState("error", "Microphone blocked");
-      showBanner("Browsers allow the microphone only on https:// or localhost. Open this page at http://localhost" + (location.port ? ":" + location.port : "") + " on the server, or serve it over HTTPS.");
+      showBanner(message);
+      refreshMicDiag();
       return;
     }
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone is not available in this browser.");
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
-      });
+      const audio = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 };
+      if (state.deviceId && !forceDefault) audio.deviceId = { exact: state.deviceId };
+      const stream = await navigator.mediaDevices.getUserMedia({ audio });
       state.stream = stream;
       state.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
       await state.ctx.resume();
@@ -502,18 +756,28 @@
       state.frames = [];
       state.speaking = false;
       state.silence = 0;
+      state.lastMicError = "";
       setState("listening", "Listening");
-      $("replyLine").textContent = "";
-      $("userLine").textContent = "";
       await api("/api/session", { method: "POST", body: JSON.stringify({ enabled: true }) });
+      refreshMics();
+      refreshMicDiag();
     } catch (error) {
       stopCapture();
+      if (!forceDefault && state.deviceId && (error.name === "OverconstrainedError" || error.name === "NotFoundError")) {
+        state.deviceId = "";
+        localStorage.removeItem("jarvis_device");
+        refreshMics();
+        return startSession(true);
+      }
       state.enabled = false;
+      setLevel(0);
       setState("error", "Microphone blocked");
+      state.lastMicError = (error.name ? error.name + ": " : "") + (error.message || "unknown error");
       const denied = error.name === "NotAllowedError" || error.name === "SecurityError";
       showBanner(denied
         ? "Microphone blocked. Allow it in site settings. If this page is embedded in another app, open it in its own tab."
         : (error.message || "Allow microphone access in the browser."));
+      refreshMicDiag();
     }
   }
 
@@ -522,8 +786,8 @@
     state.enabled = false;
     stopCapture();
     stopPlayback();
+    setLevel(0);
     setState("idle", "Ready");
-    clearActivity();
     try { await api("/api/session", { method: "POST", body: JSON.stringify({ enabled: false }) }); } catch (_) {}
   }
 
@@ -575,6 +839,7 @@
       sum += sample * sample;
     }
     const rms = Math.sqrt(sum / input.length);
+    setLevel(state.level * 0.7 + Math.min(1, rms * 4) * 0.3);
 
     if (state.ui === "speaking" && rms > 0.04) {
       stopPlayback();
@@ -618,11 +883,15 @@
     sendTurn(pcm, null);
   }
 
+  /* ---------- turn ---------- */
+
   async function sendTurn(pcm, text) {
     if (state.turnAbort) state.turnAbort.abort();
     const controller = new AbortController();
     state.turnAbort = controller;
-    $("replyLine").textContent = "";
+    state.liveUser = "";
+    state.liveReply = "";
+    renderTranscript();
     let reply = "";
     let lang = state.lang;
     try {
@@ -655,29 +924,41 @@
             try { event = JSON.parse(data); } catch (_) { continue; }
             if (event.type === "transcript") {
               lang = event.lang || lang;
-              $("userLine").textContent = event.text;
-              $("userLine").style.color = "";
+              state.liveUser = event.text;
+              renderTranscript();
             } else if (event.type === "stage") {
               startStageTimer(event.stage === "transcribing" ? "Transcribing" : "Thinking");
             } else if (event.type === "delta") {
               reply += event.text || "";
-              $("replyLine").textContent = reply;
+              state.liveReply = reply;
+              const live = $("liveReplyBody");
+              if (live) {
+                const box = $("transcript");
+                const stick = nearBottom(box);
+                live.textContent = reply;
+                if (stick) box.scrollTop = box.scrollHeight;
+              } else {
+                renderTranscript();
+              }
             } else if (event.type === "sentence") {
-              $("replyLine").textContent = reply || event.text;
               if (event.audio) enqueueAudio(event.audio);
-              else speakFallback(event.text, lang);
+              else if (state.settings?.tts !== false) speakFallback(event.text, lang);
             } else if (event.type === "done") {
               reply = event.reply || reply;
-              $("replyLine").textContent = reply;
+              state.liveUser = "";
+              state.liveReply = "";
               state.lastDone = event;
-              updateFooter(event);
+              updateBreakdown(event);
+              $("topSpend").textContent = money(event.session_cost_usd);
               clearActivity();
-              if (event.action === "end") { stopSession(); }
-              else if (event.action === "stop") { stopPlayback(); }
+              if (event.action === "end") stopSession();
+              else if (event.action === "stop") stopPlayback();
               else maybeIdle();
+              await refreshHistory();
               refreshStatusSoon();
             } else if (event.type === "error") {
               showBanner(event.message || "Jarvis could not answer.");
+              state.liveReply = "";
               clearActivity();
               setState(state.enabled ? "listening" : "idle", state.enabled ? "Listening" : "Ready");
             }
@@ -687,6 +968,7 @@
     } catch (error) {
       if (error.name === "AbortError") return;
       showBanner(error.message || "Request failed.");
+      state.liveReply = "";
       clearActivity();
       setState(state.enabled ? "listening" : "idle", state.enabled ? "Listening" : "Ready");
     } finally {
@@ -694,9 +976,47 @@
     }
   }
 
+  function cancelTurn() {
+    if (state.turnAbort) {
+      state.turnAbort.abort();
+      state.turnAbort = null;
+    }
+    api("/api/cancel", { method: "POST" }).catch(() => {});
+    stopPlayback();
+    state.liveReply = "";
+    clearActivity();
+    setState(state.enabled ? "listening" : "idle", state.enabled ? "Listening" : "Ready");
+  }
+
+  function startStageTimer(label) {
+    stopStageTimer();
+    state.stageStart = performance.now();
+    state.lastStage = label || "";
+    const tick = () => {
+      const elapsed = (performance.now() - state.stageStart) / 1000;
+      $("activity").textContent = (state.lastStage || "Thinking") + " " + elapsed.toFixed(1) + "s";
+    };
+    tick();
+    state.stageTimer = setInterval(tick, 100);
+  }
+
+  function stopStageTimer() {
+    if (state.stageTimer) clearInterval(state.stageTimer);
+    state.stageTimer = null;
+  }
+
+  function clearActivity() {
+    stopStageTimer();
+    $("activity").textContent = "";
+  }
+
+  /* ---------- playback ---------- */
+
   function enqueueAudio(base64) {
     try {
-      const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
       const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
       state.audioQueue.push(url);
       playNext();
@@ -772,6 +1092,8 @@
     maybeIdle();
   }
 
+  /* ---------- data refresh ---------- */
+
   let statusTimer = null;
   function refreshStatusSoon() {
     if (statusTimer) return;
@@ -784,17 +1106,110 @@
   async function refreshStatus() {
     try {
       const data = await (await api("/api/status")).json();
-      $("statState").textContent = data.state || "—";
-      $("statTurns").textContent = data.turns ?? "—";
-      $("statLang").textContent = state.lang;
-      $("statProfile").textContent = data.profile || "—";
-      $("statId").textContent = data.session_id || "—";
-      $("statCost").textContent = money(data.cost_usd);
-      $("statFacts").textContent = data.facts ?? "—";
-      $("statTurnCost").textContent = data.last_turn ? money(data.last_turn.cost_usd) : "—";
-      if (!state.lastDone) {
-        $("model").textContent = (data.brain?.provider || "—") + "/" + (data.brain?.model || "—");
-      }
+      state.status = data;
+      $("topBrain").textContent = (data.brain?.provider || "—") + "/" + (data.brain?.model || "—");
+      $("topSpend").textContent = money(data.spend_today ?? data.cost_usd);
+      if (!data.brain) return;
+      const rows = [
+        ["State", data.state],
+        ["Session", data.session_id],
+        ["Turns", data.turns],
+        ["Facts", data.facts],
+        ["Profile", data.profile],
+        ["Version", data.version || "—"],
+        ["Arch", data.arch || "—"],
+        ["Uptime", data.uptime_s !== undefined ? uptime(data.uptime_s) : "—"],
+        ["Database", bytes(data.db_bytes)],
+        ["Started", data.started_at || "—"],
+        ["Brain", (data.brain.provider || "—") + "/" + (data.brain.model || "—")],
+      ];
+      $("sysRows").innerHTML = "";
+      rows.forEach(([key, value]) => $("sysRows").appendChild(rowEl(key, value)));
+    } catch (_) {
+      $("stateChip").textContent = "Offline";
+      $("stateChip").dataset.state = "error";
+    }
+  }
+
+  function rowEl(key, value, node) {
+    const row = document.createElement("div");
+    row.className = "row";
+    const k = document.createElement("span");
+    k.className = "k";
+    k.textContent = key;
+    const v = document.createElement("span");
+    v.className = "v";
+    if (node) v.appendChild(node); else v.textContent = value === undefined || value === null || value === "" ? "—" : String(value);
+    row.append(k, v);
+    return row;
+  }
+
+  async function refreshHealth() {
+    try {
+      const data = await (await api("/api/health")).json();
+      state.health = data;
+      const items = [["whisper", "Whisper", "dotWhisper"], ["piper", "Piper", "dotPiper"], ["jcode", "jcode", "dotJcode"], ["db", "Database", "dotDb"]];
+      $("healthRows").innerHTML = "";
+      items.forEach(([key, label, dotId]) => {
+        const ok = Boolean(data[key]);
+        const dot = $(dotId);
+        dot.dataset.ok = String(ok);
+        dot.setAttribute("aria-label", label + ": " + (ok ? "ok" : "off"));
+        const pill = document.createElement("span");
+        pill.className = "pill " + (ok ? "ok" : "bad");
+        pill.textContent = ok ? "ok" : "off";
+        $("healthRows").appendChild(rowEl(label, "", pill));
+      });
+      const brain = document.createElement("div");
+      brain.className = "row";
+      brain.innerHTML = '<span class="k">Brain</span><span class="v">' + escapeHtml(data.brain || "—") + "</span>";
+      $("healthRows").appendChild(brain);
+    } catch (_) {}
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  async function refreshEvents() {
+    try {
+      const data = await (await api("/api/events")).json();
+      state.events = data.events || [];
+      const feed = $("eventFeed");
+      feed.innerHTML = "";
+      state.events.slice(0, 40).forEach((event) => {
+        const row = document.createElement("div");
+        row.className = "ev";
+        row.dataset.level = event.level || "info";
+        const time = document.createElement("time");
+        time.textContent = (event.ts || "").slice(11, 19);
+        row.append(time, document.createTextNode(event.event + (event.detail ? " · " + event.detail : "")));
+        feed.appendChild(row);
+      });
+      renderLogs();
+      $("logStatus").textContent = state.events.length + " events";
+    } catch (_) {}
+  }
+
+  function renderLogs() {
+    const level = $("logLevel").value;
+    const list = $("logList");
+    list.innerHTML = "";
+    state.events.filter((event) => level === "all" || event.level === level).forEach((event) => {
+      const row = document.createElement("div");
+      row.dataset.level = event.level || "info";
+      row.textContent = (event.ts || "").slice(11, 19) + " " + (event.level || "info").toUpperCase() + " " + event.event + (event.detail ? " · " + event.detail : "");
+      list.appendChild(row);
+    });
+    if (!list.children.length) list.textContent = "No events at this level.";
+  }
+
+  async function refreshHistory() {
+    try {
+      const data = await (await api("/api/history?limit=50")).json();
+      state.turns = data.turns || [];
+      renderTranscript();
+      updateBreakdown();
     } catch (_) {}
   }
 
@@ -806,11 +1221,10 @@
         const parts = line.split("\t");
         return { id: parts[0], label: parts[1] || parts[0] };
       });
-      const current = data.config?.provider || "";
-      fillSelect($("provider"), providers.map((p) => ({ value: p.id, label: p.label })), current);
-      const models = (data.models || []).map((model) => ({ value: model, label: model }));
-      fillSelect($("modelSel"), models, data.config?.model || "");
+      fillSelect($("provider"), providers, data.config?.provider || "");
+      fillSelect($("modelSel"), (data.models || []).map((m) => ({ value: m, label: m })), data.config?.model || "");
       $("brainStatus").textContent = "Current: " + (data.config?.provider || "—") + "/" + (data.config?.model || "—");
+      $("brainFallback").textContent = (data.config?.fallback || []).join(", ") || "none";
     } catch (error) {
       $("brainStatus").textContent = error.message;
     }
@@ -836,71 +1250,203 @@
     }
   }
 
-  async function refreshHealth() {
+  async function refreshSettings() {
     try {
-      const data = await (await api("/api/health")).json();
-      for (const [id, key] of [["healthWhisper", "whisper"], ["healthPiper", "piper"], ["healthJcode", "jcode"], ["healthDb", "db"]]) {
-        const el = $(id);
-        el.className = "pill " + (data[key] ? "ok" : "bad");
-        el.textContent = key + (data[key] ? " ok" : " off");
-      }
+      const data = await (await api("/api/settings")).json();
+      state.settings = data;
+      state.lang = data.lang || "auto";
+      $("langChip").textContent = state.lang === "auto" ? "Auto" : state.lang.toUpperCase();
+      $("langSel").value = state.lang;
+      $("ttsSel").value = data.tts === false ? "off" : "on";
+      $("voiceEn").value = data.voice_en || "";
+      $("voiceFr").value = data.voice_fr || "";
+      $("voiceModel").textContent = data.whisper_model || "—";
+      $("voiceProfile").textContent = data.profile || "—";
     } catch (_) {}
   }
 
-  async function refreshUsage() {
+  async function saveSettings(partial) {
     try {
-      const data = await (await api("/api/usage")).json();
-      $("statSpend").textContent = data.spend || "—";
-      $("statBalance").textContent = data.balance || "—";
-    } catch (_) {
-      $("statSpend").textContent = "—";
-      $("statBalance").textContent = "—";
+      const data = await (await api("/api/settings", { method: "POST", body: JSON.stringify(partial) })).json();
+      state.settings = data;
+      state.lang = data.lang || state.lang;
+      $("langChip").textContent = state.lang === "auto" ? "Auto" : state.lang.toUpperCase();
+      $("voiceStatus").textContent = "Saved. Applies to the next turn.";
+      return data;
+    } catch (error) {
+      $("voiceStatus").textContent = error.message;
+      showBanner(error.message);
+      return null;
     }
   }
 
-  async function refreshEvents() {
+  async function refreshCost() {
     try {
-      const data = await (await api("/api/events")).json();
-      const box = $("events");
-      box.innerHTML = "";
-      (data.events || []).slice(0, 12).forEach((event) => {
-        const row = document.createElement("div");
-        row.textContent = (event.ts || "").slice(11, 19) + " " + event.event + (event.detail ? " · " + event.detail : "");
-        box.appendChild(row);
+      const cost = await (await api("/api/cost?days=7")).json();
+      $("costToday").textContent = money(cost.today);
+      $("costSession").textContent = money(cost.session);
+      $("costLast").textContent = money(cost.last);
+      const days = cost.days || [];
+      const max = Math.max(0.000001, ...days.map((d) => Number(d.cost_usd || 0)));
+      $("costChart").innerHTML = "";
+      days.forEach((day) => {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.title = day.date + ": " + money(day.cost_usd) + " · " + day.turns + " turns";
+        const fill = document.createElement("div");
+        fill.className = "fill";
+        fill.style.height = Math.max(2, Math.round((Number(day.cost_usd || 0) / max) * 68)) + "px";
+        const label = document.createElement("div");
+        label.className = "lbl";
+        label.textContent = (day.date || "").slice(5);
+        bar.append(fill, label);
+        $("costChart").appendChild(bar);
       });
+      const history = await (await api("/api/history?limit=100&all=1")).json();
+      const rows = (history.turns || []).filter((turn) => turn.role === "assistant").slice(-20).reverse();
+      const body = $("costTable");
+      body.innerHTML = "";
+      rows.forEach((turn) => {
+        const tr = document.createElement("tr");
+        const tokens = (Number(turn.input_tokens) || 0) + (Number(turn.output_tokens) || 0);
+        [[(turn.ts || "").slice(11, 19)], [(turn.provider || "") + "/" + (turn.model || "")], [ms(turn.total_ms), "num"], [num(tokens), "num"], [money(turn.cost_usd), "num"]].forEach(([value, cls]) => {
+          const td = document.createElement("td");
+          if (cls) td.className = cls;
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+      if (!rows.length) body.innerHTML = '<tr><td colspan="5">No turns yet.</td></tr>';
+    } catch (error) {
+      $("costToday").textContent = error.message;
+    }
+  }
+
+  async function refreshFacts() {
+    try {
+      const data = await (await api("/api/facts")).json();
+      const facts = data.facts || [];
+      const list = $("factList");
+      list.innerHTML = "";
+      facts.forEach((fact) => {
+        const li = document.createElement("li");
+        const text = document.createElement("span");
+        text.className = "text";
+        text.textContent = fact.text;
+        const button = document.createElement("button");
+        button.className = "act tiny danger";
+        button.textContent = "Forget";
+        button.dataset.id = fact.id;
+        button.setAttribute("aria-label", "Forget: " + fact.text);
+        li.append(text, button);
+        list.appendChild(li);
+      });
+      if (!facts.length) {
+        const li = document.createElement("li");
+        li.className = "hint";
+        li.textContent = "No facts yet. Say \"remember that ...\" or add one above.";
+        list.appendChild(li);
+      }
+      $("memoryStatus").textContent = facts.length + " facts";
+    } catch (error) {
+      $("memoryStatus").textContent = error.message;
+    }
+  }
+
+  async function refreshMics() {
+    const select = $("micSel");
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      select.innerHTML = "<option>Not available</option>";
+      select.disabled = true;
+      return;
+    }
+    try {
+      const devices = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "audioinput");
+      select.innerHTML = "";
+      select.appendChild(new Option("System default", ""));
+      devices.forEach((device, index) => {
+        select.appendChild(new Option(device.label || "Microphone " + (index + 1), device.deviceId));
+      });
+      select.value = state.deviceId;
+      select.disabled = devices.length === 0;
     } catch (_) {}
   }
 
-  function openDrawer() {
-    $("drawer").dataset.open = "true";
-    $("drawer").setAttribute("aria-hidden", "false");
-    $("backdrop").dataset.open = "true";
-    document.body.classList.add("drawer-open");
-    refreshStatus();
-    refreshBrain();
-    refreshHealth();
-    refreshUsage();
-    refreshEvents();
+  async function refreshMicDiag() {
+    const box = $("micDiag");
+    const rows = [
+      ["Origin", location.origin],
+      ["Secure context", window.isSecureContext ? "yes" : "no"],
+    ];
+    let permission = "unknown";
+    try {
+      const status = await navigator.permissions.query({ name: "microphone" });
+      permission = status.state;
+    } catch (_) {}
+    rows.push(["Mic permission", permission]);
+    if (state.lastMicError) rows.push(["Last error", state.lastMicError]);
+    box.innerHTML = "";
+    rows.forEach(([key, value]) => box.appendChild(rowEl(key, value)));
+    const hint = document.createElement("p");
+    hint.className = "hint";
+    if (!window.isSecureContext) {
+      hint.textContent = "Browsers require HTTPS or localhost before they allow a microphone.";
+    } else if (permission === "denied") {
+      hint.textContent = "The microphone is blocked for this site. Reset it in browser site settings, then reload.";
+    } else if (state.lastMicError) {
+      hint.textContent = "If this page is inside another app, open it in its own tab; embedded frames need explicit microphone permission.";
+    } else {
+      hint.textContent = "Browser facts behind the microphone. If Start fails, this line explains why.";
+    }
+    box.appendChild(hint);
   }
 
-  function closeDrawer() {
-    $("drawer").dataset.open = "false";
-    $("drawer").setAttribute("aria-hidden", "true");
-    $("backdrop").dataset.open = "false";
-    document.body.classList.remove("drawer-open");
+  /* ---------- tabs ---------- */
+
+  function activateTab(name) {
+    state.tab = name;
+    document.querySelectorAll(".tab").forEach((tab) => {
+      const on = tab.dataset.tab === name;
+      tab.setAttribute("aria-selected", String(on));
+      tab.tabIndex = on ? 0 : -1;
+    });
+    document.querySelectorAll(".tabpanel").forEach((panel) => {
+      panel.hidden = panel.id !== "panel-" + name;
+    });
+    if (name === "brain") refreshBrain();
+    else if (name === "voice") { refreshSettings(); refreshMics(); refreshMicDiag(); }
+    else if (name === "memory") refreshFacts();
+    else if (name === "cost") refreshCost();
+    else if (name === "system") refreshStatus();
+    else if (name === "logs") refreshEvents();
   }
+
+  /* ---------- wiring ---------- */
 
   $("orb").addEventListener("click", toggleSession);
-  $("infoBtn").addEventListener("click", openDrawer);
-  $("footer").addEventListener("click", openDrawer);
-  $("footer").addEventListener("keydown", (event) => { if (event.key === "Enter") openDrawer(); });
-  $("drawerClose").addEventListener("click", closeDrawer);
-  $("backdrop").addEventListener("click", closeDrawer);
-
+  $("sessionBtn").addEventListener("click", toggleSession);
+  $("cancelBtn").addEventListener("click", cancelTurn);
   $("langChip").addEventListener("click", () => {
-    state.lang = state.lang === "auto" ? "en" : state.lang === "en" ? "fr" : "auto";
-    $("langChip").textContent = state.lang === "auto" ? "Auto" : state.lang.toUpperCase();
-    $("statLang").textContent = state.lang;
+    const next = state.lang === "auto" ? "en" : state.lang === "en" ? "fr" : "auto";
+    saveSettings({ lang: next });
+  });
+
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => activateTab(tab.dataset.tab));
+  });
+  $("tab-brain").parentElement.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+    event.preventDefault();
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const index = tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true");
+    const next = tabs[(index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    next.focus();
+    activateTab(next.dataset.tab);
+  });
+
+  document.querySelectorAll(".dot").forEach((dot) => {
+    dot.addEventListener("click", () => activateTab("system"));
   });
 
   $("provider").addEventListener("change", () => refreshBrain($("provider").value));
@@ -924,14 +1470,75 @@
     }
   });
 
+  $("saveVoice").addEventListener("click", () => {
+    saveSettings({
+      lang: $("langSel").value,
+      tts: $("ttsSel").value === "on",
+      voice_en: $("voiceEn").value.trim(),
+      voice_fr: $("voiceFr").value.trim(),
+    });
+  });
+
+  $("micSel").addEventListener("change", async () => {
+    state.deviceId = $("micSel").value;
+    if (state.deviceId) localStorage.setItem("jarvis_device", state.deviceId);
+    else localStorage.removeItem("jarvis_device");
+    if (state.enabled) {
+      await stopSession();
+      await startSession();
+    }
+  });
+
+  $("addFact").addEventListener("click", async () => {
+    const text = $("newFact").value.trim();
+    if (!text) return;
+    try {
+      await api("/api/facts", { method: "POST", body: JSON.stringify({ text }) });
+      $("newFact").value = "";
+      $("memoryStatus").textContent = "Saved.";
+      refreshFacts();
+    } catch (error) {
+      $("memoryStatus").textContent = error.message;
+    }
+  });
+  $("newFact").addEventListener("keydown", (event) => { if (event.key === "Enter") $("addFact").click(); });
+
+  $("factList").addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-id]");
+    if (!button) return;
+    try {
+      await api("/api/facts/forget", { method: "POST", body: JSON.stringify({ id: Number(button.dataset.id) }) });
+      refreshFacts();
+    } catch (error) {
+      $("memoryStatus").textContent = error.message;
+    }
+  });
+
+  $("exportFacts").addEventListener("click", () => download("/api/export?what=facts", "jarvis-facts.json").catch((e) => { $("memoryStatus").textContent = e.message; }));
+  $("exportAll").addEventListener("click", () => download("/api/export?what=all", "jarvis-export.json").catch((e) => { $("logStatus").textContent = e.message; }));
+
   $("forgetAll").addEventListener("click", async () => {
     if (!confirm("Delete all facts, turns, and events?")) return;
     try {
       await api("/api/forget", { method: "POST", body: JSON.stringify({ all: true }) });
+      await refreshFacts();
+      await refreshHistory();
+      await refreshEvents();
       refreshStatus();
-      refreshEvents();
     } catch (error) {
       showBanner(error.message);
+    }
+  });
+
+  $("logLevel").addEventListener("change", renderLogs);
+  $("refreshLogs").addEventListener("click", refreshEvents);
+  $("copyLogs").addEventListener("click", async () => {
+    const text = state.events.map((e) => (e.ts || "") + " " + (e.level || "info") + " " + e.event + (e.detail ? " · " + e.detail : "")).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      $("logStatus").textContent = "Copied.";
+    } catch (_) {
+      $("logStatus").textContent = "Copy failed.";
     }
   });
 
@@ -958,16 +1565,17 @@
 
   document.addEventListener("keydown", (event) => {
     const tag = (event.target && event.target.tagName) || "";
-    const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(tag);
+    const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(tag) || tag === "BUTTON" || tag === "A";
     if (event.code === "Space" && !typing) {
       event.preventDefault();
       toggleSession();
     } else if (event.key === "Escape") {
       stopPlayback();
-      if ($("drawer").dataset.open === "true") closeDrawer();
+      if (state.turnAbort) cancelTurn();
       else setState(state.enabled ? "listening" : "idle", state.enabled ? "Listening" : "Ready");
-    } else if ((event.key === "i" || event.key === "I") && !typing) {
-      if ($("drawer").dataset.open === "true") closeDrawer(); else openDrawer();
+    } else if (event.key === "/" && !typing) {
+      event.preventDefault();
+      $("textInput").focus();
     }
   });
 
@@ -975,9 +1583,26 @@
     if (document.hidden) stopPlayback();
   });
 
+  function poll() {
+    if (document.hidden) return;
+    refreshStatus();
+    refreshHealth();
+    refreshEvents();
+    if (state.tab === "cost") refreshCost();
+    if (state.tab === "memory") refreshFacts();
+  }
+
+  setLevel(0);
   setState("idle", "Ready");
+  refreshSettings();
   refreshStatus();
-  fetch("/api/health").then((r) => r.json()).then(() => {}).catch(() => {});
+  refreshHealth();
+  refreshEvents();
+  refreshHistory();
+  refreshBrain();
+  refreshMics();
+  refreshMicDiag();
+  state.pollTimer = setInterval(poll, 5000);
 })();
 </script>
 </body>

@@ -1,24 +1,26 @@
 # Memory
 
-Updated: 2026-10-31 20:07
+Updated: 2026-10-31 20:15
 
 ## Current state
 
-- Plan: PLAN.md (v2 control panel, awaiting approval; v1 archived in same file)
-- Working on: v2 design and plan; no v2 code written
-- Direction: desktop-first control panel, Operate mode, dense but grouped.
-  Now + Live always visible, tabs for Brain/Voice/Memory/Cost/System/Logs.
-- Contracts: API contract frozen in PLAN.md; PRODUCT.md written.
-- Changed: PLAN.md v2 + PRODUCT.md; earlier whisper/mic fixes in
-  jarvis.py, index.html, Dockerfile.
-- Verified: nothing new; no python3, podman, or browser bridge in this env.
-- Blocked: user approval of v2 plan before any v2 code.
+- Plan: PLAN.md (v2 built, verification pending)
+- Working on: `aium/jcode-jarvis` v2 control panel
+- Built: panel shell (Now, Live rail, six tabs), backend endpoints
+  `/api/history`, `/api/cost`, `/api/settings`, `/api/export`,
+  `/api/facts`, `/api/facts/forget`; settings file; status fields.
+- Verified: Impeccable detector clean; JS bracket balance clean; every JS id
+  exists; backend diff reviewed. No runtime run: no python3, podman, browser.
+- Blocked: tests, selftest, HTTP smoke, screenshots, image rebuild need the
+  user's machine.
 
 ## Next step
 
-1. Get approval for PLAN.md v2, then build phase 1 (backend) and phase 2
-   (panel shell) in parallel, integrate, verify where python/podman exist.
-2. Still open: image rebuild for whisper, Firefox mic cause, commit v1.
+1. User runs `python3 -m unittest discover -s tests` and
+   `python3 jarvis.py --selftest` in `aium/jcode-jarvis`, then rebuilds the
+   image and confirms whisper health.
+2. Open the panel and check mic diagnostics, transcript, cost tab, and memory.
+3. Still open: Firefox mic cause, screenshots, commit.
 
 ## Log (last 10)
 
@@ -28,3 +30,5 @@ Updated: 2026-10-31 20:07
   spam; clarified mic errors on insecure contexts. Rebuild still pending.
 - 2026-10-31 20:07 - Agreed v2 direction: desktop-first control panel. Wrote
   PRODUCT.md and v2 plan with frozen API contract. No code yet.
+- 2026-10-31 20:15 - Built v2: panel rewrite, six tabs, backend endpoints and
+  settings, DESIGN.md, tests. Detector clean; runtime verification pending.

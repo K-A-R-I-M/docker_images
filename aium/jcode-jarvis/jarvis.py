@@ -15,6 +15,7 @@ import io
 import json
 import math
 import os
+import platform
 import re
 import shutil
 import socket
@@ -29,11 +30,12 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import wave
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+VERSION = "2.0"
 DEFAULT_BRAIN = {
     "backend": "jcode",
     "provider": "deepseek",
@@ -189,6 +191,63 @@ def save_brain(path: Path, config: dict) -> None:
     tmp = path.with_suffix(".tmp")
     tmp.write_text(text, encoding="utf-8")
     os.replace(tmp, path)
+
+
+SETTINGS_DEFAULTS = {
+    "tts": True,
+    "lang": "auto",
+    "voice_en": "",
+    "voice_fr": "",
+}
+SETTINGS_LANGS = {"auto", "en", "fr"}
+
+
+class Settings:
+    """Small persisted preferences file. Loading never raises."""
+
+    def __init__(self, path: Path):
+        self.path = Path(path)
+        self.lock = threading.RLock()
+        self.values = dict(SETTINGS_DEFAULTS)
+        self.load()
+
+    def load(self) -> dict:
+        data = load_json(self.path, None)
+        if isinstance(data, dict):
+            self.merge(data, save=False)
+        return self.as_dict()
+
+    def as_dict(self) -> dict:
+        with self.lock:
+            return dict(self.values)
+
+    def get(self, key: str, default=None):
+        with self.lock:
+            return self.values.get(key, SETTINGS_DEFAULTS.get(key, default))
+
+    def merge(self, data: dict, save: bool = True) -> dict:
+        if not isinstance(data, dict):
+            return self.as_dict()
+        with self.lock:
+            if isinstance(data.get("tts"), bool):
+                self.values["tts"] = data["tts"]
+            lang = data.get("lang")
+            if isinstance(lang, str) and lang in SETTINGS_LANGS:
+                self.values["lang"] = lang
+            for key in ("voice_en", "voice_fr"):
+                value = data.get(key)
+                if isinstance(value, str):
+                    self.values[key] = value.strip()[:120]
+            if save:
+                self.save()
+            return dict(self.values)
+
+    def save(self) -> None:
+        with self.lock:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self.path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(self.values, indent=2) + "\n", encoding="utf-8")
+            os.replace(tmp, self.path)
 
 
 def compute_cost(pricing: dict, provider: str, model: str, usage: dict | None) -> float | None:
@@ -398,6 +457,15 @@ class Store:
             self.conn.execute("DELETE FROM sessions")
         self.session_id = self.new_session()
 
+    def delete_fact(self, fact_id: int) -> int:
+        try:
+            fact_id = int(fact_id)
+        except (TypeError, ValueError):
+            return 0
+        with self.lock, self.conn:
+            cursor = self.conn.execute("DELETE FROM facts WHERE id = ?", (fact_id,))
+        return int(cursor.rowcount or 0)
+
     def add_turn(
         self,
         role: str,
@@ -468,6 +536,127 @@ class Store:
             return self.path.stat().st_size
         except OSError:
             return 0
+
+    @staticmethod
+    def _clamp_int(value, default: int, low: int, high: int) -> int:
+        try:
+            number = int(value)
+        except (TypeError, ValueError):
+            number = default
+        return max(low, min(high, number))
+
+    @staticmethod
+    def _turn_dict(row: sqlite3.Row) -> dict:
+        return {
+            "role": str(row["role"]),
+            "text": str(row["text"]),
+            "lang": row["lang"] or "",
+            "stt_ms": int(row["stt_ms"] or 0),
+            "ttft_ms": int(row["ttft_ms"] or 0),
+            "total_ms": int(row["total_ms"] or 0),
+            "input_tokens": int(row["input_tokens"] or 0),
+            "output_tokens": int(row["output_tokens"] or 0),
+            "cost_usd": float(row["cost_usd"] or 0),
+            "provider": row["provider"] or "",
+            "model": row["model"] or "",
+            "ts": str(row["ts"]),
+        }
+
+    _TURN_COLUMNS = (
+        "role, text, lang, stt_ms, ttft_ms, total_ms, input_tokens, output_tokens, "
+        "cost_usd, provider, model, ts"
+    )
+
+    def history(self, limit: int = 50, all_sessions: bool = False) -> list[dict]:
+        limit = self._clamp_int(limit, 50, 1, 200)
+        with self.lock:
+            if all_sessions:
+                rows = self.conn.execute(
+                    f"SELECT {self._TURN_COLUMNS} FROM turns ORDER BY id DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+            else:
+                rows = self.conn.execute(
+                    f"SELECT {self._TURN_COLUMNS} FROM turns WHERE session_id = ? "
+                    "ORDER BY id DESC LIMIT ?",
+                    (self.session_id, limit),
+                ).fetchall()
+        return [self._turn_dict(row) for row in reversed(rows)]
+
+    def all_turns(self) -> list[dict]:
+        with self.lock:
+            rows = self.conn.execute(
+                f"SELECT {self._TURN_COLUMNS} FROM turns ORDER BY id ASC"
+            ).fetchall()
+        return [self._turn_dict(row) for row in rows]
+
+    def export_sessions(self) -> list[dict]:
+        with self.lock:
+            rows = self.conn.execute(
+                "SELECT id, started_at, ended_at, turns, cost_usd FROM sessions ORDER BY started_at ASC"
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def cost_by_day(self, days: int = 7) -> list[dict]:
+        days = self._clamp_int(days, 7, 1, 90)
+        today = date.today()
+        start = today - timedelta(days=days - 1)
+        with self.lock:
+            rows = self.conn.execute(
+                "SELECT date(ts, 'localtime') AS day, COALESCE(SUM(cost_usd), 0) AS cost, "
+                "COUNT(*) AS n FROM turns WHERE role = 'assistant' "
+                "AND date(ts, 'localtime') >= ? GROUP BY day",
+                (start.isoformat(),),
+            ).fetchall()
+        buckets = {
+            str(row["day"]): (float(row["cost"] or 0), int(row["n"] or 0))
+            for row in rows
+        }
+        out = []
+        for offset in range(days):
+            day = (start + timedelta(days=offset)).isoformat()
+            cost, turns = buckets.get(day, (0.0, 0))
+            out.append({"date": day, "cost_usd": round(cost, 8), "turns": turns})
+        return out
+
+    def per_turn_costs(self, limit: int = 20) -> list[dict]:
+        limit = self._clamp_int(limit, 20, 1, 100)
+        with self.lock:
+            rows = self.conn.execute(
+                "SELECT ts, role, cost_usd, total_ms, input_tokens, output_tokens, provider, model "
+                "FROM turns WHERE session_id = ? ORDER BY id DESC LIMIT ?",
+                (self.session_id, limit),
+            ).fetchall()
+        return [
+            {
+                "ts": str(row["ts"]),
+                "role": str(row["role"]),
+                "cost_usd": float(row["cost_usd"] or 0),
+                "total_ms": int(row["total_ms"] or 0),
+                "input_tokens": int(row["input_tokens"] or 0),
+                "output_tokens": int(row["output_tokens"] or 0),
+                "provider": row["provider"] or "",
+                "model": row["model"] or "",
+            }
+            for row in rows
+        ]
+
+    def spend_today(self) -> float:
+        with self.lock:
+            row = self.conn.execute(
+                "SELECT COALESCE(SUM(cost_usd), 0) AS cost FROM turns "
+                "WHERE role = 'assistant' AND date(ts, 'localtime') = date('now', 'localtime')"
+            ).fetchone()
+        return float(row["cost"] or 0) if row else 0.0
+
+    def last_assistant_cost(self) -> float:
+        with self.lock:
+            row = self.conn.execute(
+                "SELECT cost_usd FROM turns WHERE session_id = ? AND role = 'assistant' "
+                "ORDER BY id DESC LIMIT 1",
+                (self.session_id,),
+            ).fetchone()
+        return float(row["cost_usd"] or 0) if row else 0.0
 
     def event(self, level: str, event: str, detail: str = "") -> None:
         with self.lock, self.conn:
@@ -875,6 +1064,7 @@ class Core:
         self.brain_config = load_brain(seed_brain)
         self.pricing = load_json(ROOT / "pricing.json", {})
         self.store = Store(self.data_dir / "jarvis.db")
+        self.settings = Settings(self.data_dir / "settings.json")
         self.router = Router()
         self.speech = Speech(self)
         self.brain = Brain(self)
@@ -892,16 +1082,20 @@ class Core:
         self.profile = "low" if profile == "low" else "standard"
         default_model = "/opt/whisper/models/ggml-tiny-q5_1.bin" if self.profile == "low" else "/opt/whisper/models/ggml-base-q5_1.bin"
         self.whisper_model = os.environ.get("JARVIS_WHISPER_MODEL", default_model)
-        self.voice_names = {
+        self.default_voice_names = {
             "en": os.environ.get("JARVIS_VOICE_EN_NAME", "en_US-lessac-medium"),
             "fr": os.environ.get("JARVIS_VOICE_FR_NAME", "fr_FR-siwis-medium"),
         }
-        self.voice_paths = {
+        self.default_voice_paths = {
             "en": os.environ.get("JARVIS_VOICE_EN", "/opt/piper/voices/en_US-lessac-medium.onnx"),
             "fr": os.environ.get("JARVIS_VOICE_FR", "/opt/piper/voices/fr_FR-siwis-medium.onnx"),
         }
+        self.voice_names = dict(self.default_voice_names)
+        self.voice_paths = dict(self.default_voice_paths)
         self.voices = self.voice_names
+        self.apply_settings()
         self.started_at = now_iso()
+        self.started_ts = time.time()
 
     def set_session(self, enabled: bool) -> None:
         self.session_enabled = bool(enabled)
@@ -912,7 +1106,7 @@ class Core:
         return {
             "state": self.state,
             "session": self.session_enabled,
-            "lang": "auto",
+            "lang": self.settings.get("lang", "auto"),
             "profile": self.profile,
             "brain": {
                 "provider": self.brain_config.get("provider", ""),
@@ -927,7 +1121,32 @@ class Core:
             "cost_usd": round(self.store.session_cost(), 8),
             "last_turn": self.last_turn,
             "started_at": self.started_at,
+            "spend_today": round(self.store.spend_today(), 8),
+            "uptime_s": int(max(0.0, time.time() - self.started_ts)),
+            "version": VERSION,
+            "arch": platform.machine(),
         }
+
+    def settings_dict(self) -> dict:
+        values = self.settings.as_dict()
+        return {
+            "tts": bool(values.get("tts", True)),
+            "lang": values.get("lang", "auto"),
+            "voice_en": values.get("voice_en", ""),
+            "voice_fr": values.get("voice_fr", ""),
+            "whisper_model": self.whisper_model,
+            "profile": self.profile,
+        }
+
+    def apply_settings(self) -> None:
+        for code in ("en", "fr"):
+            self.voice_names[code] = self.default_voice_names[code]
+            self.voice_paths[code] = self.default_voice_paths[code]
+            chosen = re.sub(r"[^A-Za-z0-9._-]", "", str(self.settings.get(f"voice_{code}", "") or ""))
+            if chosen:
+                self.voice_names[code] = chosen
+                voices_dir = Path(os.environ.get("JARVIS_PIPER_VOICES", "/opt/piper/voices"))
+                self.voice_paths[code] = str(voices_dir / (chosen + ".onnx"))
 
     def health(self) -> dict:
         whisper = check_port(self.whisper_url)
@@ -976,6 +1195,11 @@ class Core:
         success = False
         try:
             self.cancel_event.clear()
+            lang = (lang or "auto").strip().lower()
+            if lang == "auto":
+                configured = self.settings.get("lang", "auto")
+                if configured in ("en", "fr"):
+                    lang = configured
             started = time.time()
             stt_ms = 0
             if pcm:
@@ -1091,7 +1315,7 @@ def check_port(url: str, timeout: float = 0.5) -> bool:
 
 class Handler(BaseHTTPRequestHandler):
     core: Core
-    server_version = "Jarvis/1.0"
+    server_version = "Jarvis/" + VERSION
 
     def log_message(self, fmt: str, *args) -> None:
         if not os.environ.get("JARVIS_QUIET"):
@@ -1116,6 +1340,24 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(200 if (not strict or health["ok"]) else 503, health)
         elif path == "/api/status":
             self._send_json(200, self.core.status())
+        elif path == "/api/history":
+            query = urllib.parse.parse_qs(parsed.query)
+            limit = self._query_int(query, "limit", 50)
+            all_sessions = query.get("all", ["0"])[0] in ("1", "true", "yes")
+            self._send_json(200, {"turns": self.core.store.history(limit, all_sessions)})
+        elif path == "/api/cost":
+            query = urllib.parse.parse_qs(parsed.query)
+            days = self._query_int(query, "days", 7)
+            self._send_json(200, {
+                "days": self.core.store.cost_by_day(days),
+                "today": round(self.core.store.spend_today(), 8),
+                "session": round(self.core.store.session_cost(), 8),
+                "last": round(self.core.store.last_assistant_cost(), 8),
+            })
+        elif path == "/api/settings":
+            self._send_json(200, self.core.settings_dict())
+        elif path == "/api/export":
+            self._handle_export(parsed)
         elif path == "/api/brain":
             provider = urllib.parse.parse_qs(parsed.query).get("provider", [None])[0]
             self._send_json(200, self._brain_info(provider))
@@ -1127,6 +1369,33 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(200, self.core.machine_usage() or {})
         else:
             self._send_json(404, {"error": "not found"})
+
+    @staticmethod
+    def _query_int(query: dict, name: str, default: int) -> int:
+        try:
+            return int(query.get(name, [str(default)])[0])
+        except (TypeError, ValueError):
+            return default
+
+    def _handle_export(self, parsed) -> None:
+        what = urllib.parse.parse_qs(parsed.query).get("what", ["all"])[0]
+        if what not in ("all", "facts", "turns"):
+            self._send_json(400, {"error": "what must be all, facts, or turns"})
+            return
+        payload = {}
+        if what in ("all", "facts"):
+            payload["facts"] = self.core.store.recall("", 100000)
+        if what in ("all", "turns"):
+            payload["turns"] = self.core.store.all_turns()
+        if what == "all":
+            payload["sessions"] = self.core.store.export_sessions()
+            payload["settings"] = self.core.settings_dict()
+        self._send_bytes(
+            200,
+            json.dumps(payload).encode("utf-8"),
+            "application/json; charset=utf-8",
+            {"Content-Disposition": 'attachment; filename="jarvis-export.json"'},
+        )
 
     def do_POST(self) -> None:
         if not self._auth_ok():
@@ -1149,10 +1418,59 @@ class Handler(BaseHTTPRequestHandler):
                 data = self._read_json()
                 result = self.core.turn(text=data.get("text", ""), lang=data.get("lang", "auto"))
                 self._send_json(200, result)
+            elif path == "/api/settings":
+                try:
+                    data = self._read_json()
+                except Exception:
+                    self._send_json(400, {"error": "invalid JSON body"})
+                    return
+                if not isinstance(data, dict):
+                    self._send_json(400, {"error": "body must be a JSON object"})
+                    return
+                self.core.settings.merge(data)
+                self.core.apply_settings()
+                self._send_json(200, self.core.settings_dict())
             elif path == "/api/tts":
+                if not self.core.settings.get("tts", True):
+                    self._send_json(409, {"error": "TTS is disabled in settings"})
+                    return
                 data = self._read_json()
-                audio = self.core.speech.synthesize(data.get("text", ""), data.get("lang", "en"))
+                lang = str(data.get("lang") or "auto").lower()
+                if lang not in ("en", "fr"):
+                    configured = self.core.settings.get("lang", "auto")
+                    lang = configured if configured in ("en", "fr") else "en"
+                audio = self.core.speech.synthesize(data.get("text", ""), lang)
                 self._send_bytes(200, audio, "audio/wav")
+            elif path == "/api/facts":
+                try:
+                    data = self._read_json()
+                except Exception:
+                    self._send_json(400, {"error": "invalid JSON body"})
+                    return
+                if not isinstance(data, dict):
+                    self._send_json(400, {"error": "body must be a JSON object"})
+                    return
+                text = str(data.get("text") or "").strip()
+                if not text:
+                    self._send_json(400, {"error": "text is required"})
+                    return
+                self.core.store.remember(text, str(data.get("tags") or ""))
+                self._send_json(200, {"ok": True, "facts": self.core.store.recall("", 30)})
+            elif path == "/api/facts/forget":
+                try:
+                    data = self._read_json()
+                except Exception:
+                    self._send_json(400, {"error": "invalid JSON body"})
+                    return
+                if not isinstance(data, dict):
+                    self._send_json(400, {"error": "body must be a JSON object"})
+                    return
+                deleted = self.core.store.delete_fact(data.get("id"))
+                self._send_json(200, {
+                    "ok": True,
+                    "deleted": deleted,
+                    "facts_count": self.core.store.facts_count(),
+                })
             elif path == "/api/forget":
                 data = self._read_json()
                 if data.get("all"):
@@ -1213,7 +1531,7 @@ class Handler(BaseHTTPRequestHandler):
         def emit(event: dict) -> None:
             if event.get("type") == "transcript":
                 self._turn_lang = event.get("lang") or self._turn_lang
-            if event.get("type") == "sentence":
+            if event.get("type") == "sentence" and self.core.settings.get("tts", True):
                 try:
                     audio = self.core.speech.synthesize(event.get("text", ""), event.get("lang") or self._turn_lang)
                     if audio:
@@ -1310,11 +1628,13 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(payload).encode("utf-8")
         self._send_bytes(code, body, "application/json; charset=utf-8")
 
-    def _send_bytes(self, code: int, body: bytes, content_type: str) -> None:
+    def _send_bytes(self, code: int, body: bytes, content_type: str, headers: dict | None = None) -> None:
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        for key, value in (headers or {}).items():
+            self.send_header(key, value)
         self.end_headers()
         try:
             self.wfile.write(body)
@@ -1459,12 +1779,13 @@ def device_loop(core: Core, lang: str) -> None:
                             result = core.turn(pcm=pcm, lang=lang)
                             print("You:", result.get("transcript", ""))
                             print("Jarvis:", result.get("reply", ""))
-                            audio = core.speech.synthesize(result.get("reply", ""), result.get("lang", lang))
-                            if audio:
-                                with tempfile.NamedTemporaryFile(suffix=".wav") as handle:
-                                    handle.write(audio)
-                                    handle.flush()
-                                    subprocess.run(["aplay", "-q", handle.name], check=False)
+                            if core.settings.get("tts", True):
+                                audio = core.speech.synthesize(result.get("reply", ""), result.get("lang", lang))
+                                if audio:
+                                    with tempfile.NamedTemporaryFile(suffix=".wav") as handle:
+                                        handle.write(audio)
+                                        handle.flush()
+                                        subprocess.run(["aplay", "-q", handle.name], check=False)
                         except Exception as exc:
                             print("Error:", exc)
     finally:

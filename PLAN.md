@@ -1,7 +1,7 @@
 # Plan: `aium:jcode-jarvis` v2 control panel
 
-Status: awaiting approval
-Updated: 2026-10-31 20:07
+Status: built, verification pending (runtime untested here)
+Updated: 2026-10-31 20:15
 
 ## Goal
 
@@ -15,8 +15,8 @@ primary screen.
 - Voice-first page becomes an Operate-mode dashboard.
 - Information already in SQLite (transcript, timings, cost, memory, events)
   becomes visible. No new model calls, no new data collection.
-- Three new small read endpoints and one settings endpoint. Everything else
-  reuses the existing API.
+- Three new read endpoints, one settings endpoint, one export endpoint, and
+  two fact endpoints. Everything else reuses the existing API.
 
 ## Layout (desktop first)
 
@@ -86,13 +86,16 @@ Unchanged: `/api/status`, `/api/health`, `/api/brain`, `/api/brain/test`,
 
 1. Commit the current untracked work in logical slices. Files: `PLAN.md`,
    `PRODUCT.md`, `MEMORY.md`, `aium/jcode-jarvis/*`. Acceptance: `git status`
-   clean apart from ignored files.
+   clean apart from ignored files. **Done:** commit `7748193`; v2 follows in a
+   second commit.
 2. Rebuild the image and confirm `whisper-server` stays up (static build fix).
    Acceptance: no `exited 127` in the event feed, `/api/health` whisper true.
+   **Pending:** needs podman, absent here.
 3. Confirm the Firefox mic cause using the diagnostics contract above once the
-   Voice tab exists; do not guess before then.
+   Voice tab exists; do not guess before then. **Tool shipped:** the Voice tab
+   shows origin, secure context, permission state, and last mic error.
 
-### Phase 1: backend (lane A, `jarvis.py`, `tests/test_jarvis.py`)
+### Phase 1: backend (lane A, `jarvis.py`, `tests/test_jarvis.py`) **built**
 
 1. `Store.history(limit, all_sessions)`, `Store.cost_by_day(days)`,
    `Store.per_turn_costs(limit)`. Acceptance: unit tests on a temp DB.
@@ -108,6 +111,8 @@ Unchanged: `/api/status`, `/api/health`, `/api/brain`, `/api/brain/test`,
    `python3 jarvis.py --selftest`.
 
 ### Phase 2: panel shell (lane B, `index.html`)
+
+**Built.** `DESIGN.md` added; detector reports no findings.
 
 Depends only on the frozen contract, so it can run in parallel with phase 1.
 
@@ -128,6 +133,11 @@ Depends only on the frozen contract, so it can run in parallel with phase 1.
    error. Acceptance: shows the Firefox error verbatim next to the fix hint.
 
 ### Phase 3: integration and verification (coordinator, serial)
+
+**Integration done.** Old drawer removed, every control moved into a tab.
+
+**Unverified here:** tests, selftest, HTTP smoke, screenshots, image rebuild.
+See "Verification limits".
 
 1. Wire the frontend to the real endpoints; delete the old drawer once no
    control is lost. Acceptance: feature checklist, no dead control.

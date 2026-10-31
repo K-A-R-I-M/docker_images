@@ -1,13 +1,14 @@
 # jcode-jarvis
 
-A voice-first companion image: local speech, local memory, and a modular cloud
-brain. Audio never leaves the container.
+A voice-first companion with a control panel: local speech, local memory, and
+a modular cloud brain. Audio never leaves the container.
 
 - Local STT: whisper.cpp `base` (default) or `tiny` (`JARVIS_PROFILE=low`).
-- Local TTS: Piper, one English and one French voice.
+- Local TTS: Piper, one English and one French voice; can be switched off.
 - Local router and SQLite memory for small intents, facts, and the last turns.
 - Cloud brain: jcode with any configured provider/model. DeepSeek by default.
 - Browser and device audio adapters from the same core.
+- Panel: live transcript, turn timings, health, events, memory, cost, logs.
 
 ## Build
 
@@ -37,7 +38,7 @@ podman run --rm -it --name jcode-jarvis \
   localhost/jcode-jarvis
 ```
 
-Open <http://localhost:8765>. Press the orb or `Space` to start a session. Press
+Open <http://localhost:8765>. Press Start or `Space` to start a session. Press
 again, or say "goodbye", to end it. The microphone requires `localhost` or
 HTTPS. For a phone or another machine, put the container behind HTTPS or a
 Tailscale address, and set `JARVIS_TOKEN`:
@@ -46,7 +47,12 @@ Tailscale address, and set `JARVIS_TOKEN`:
 -e JARVIS_TOKEN="a-long-random-value" -p 0.0.0.0:8765:8765
 ```
 
-The UI asks for the token in the Info drawer.
+The panel keeps Now and Live on screen: transcript, per-turn timings, health,
+and events. Tabs cover Brain (provider/model), Voice (language, voices, mic
+device, browser mic diagnostics), Memory (facts, add, forget, export), Cost
+(today, session, last turn, 7-day chart, recent turns), System (versions,
+uptime, database size, token, export), and Logs (filterable events). The token
+is saved in System.
 
 ## Run, device mode
 
@@ -131,6 +137,26 @@ tokens without a dollar amount. Local speech is free.
 | `JARVIS_BRAIN_MODEL` | `deepseek-v4-flash` | override model |
 | `JARVIS_HOST` / `JARVIS_PORT` | `127.0.0.1` / `8765` | bind address |
 
+## API
+
+Read-only data for the panel, all authenticated when `JARVIS_TOKEN` is set:
+
+| Route | Purpose |
+|---|---|
+| `GET /api/status` | state, session, turns, facts, cost, spend today, uptime, version, arch |
+| `GET /api/health` | whisper, piper, jcode, db, brain |
+| `GET /api/history?limit=50&all=0` | recent turns with timings, tokens, cost |
+| `GET /api/cost?days=7` | per-day cost, today, session, last turn |
+| `GET /api/events` | recent supervisor and request events |
+| `GET /api/facts` | stored facts |
+| `GET/POST /api/settings` | `tts`, `lang`, `voice_en`, `voice_fr` (persisted to `/data/settings.json`) |
+| `GET /api/export?what=all\|facts\|turns` | JSON download |
+| `POST /api/facts`, `POST /api/facts/forget` | add a fact, delete one by id |
+| `POST /api/turn?stream=1` | SSE turn: transcript, stage, delta, sentence, done |
+
+Speech settings apply to the next turn. `tts: false` keeps text replies and
+silences server synthesis.
+
 ## Tests
 
 ```sh
@@ -155,7 +181,7 @@ not need a microphone, Piper, Whisper, or network.
 ```
 Dockerfile      multi-arch image build
 jarvis.py       HTTP, router, memory, brain, speech, cost, selftest
-index.html      single-page orb UI
+index.html      control panel UI (transcript, live events, six tabs)
 AGENTS.md       companion persona (also installed as /root/AGENTS.md)
 config.toml     minimal jcode provider config
 brain.toml      default provider/model/fallback

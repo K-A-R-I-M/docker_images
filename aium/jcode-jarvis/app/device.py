@@ -11,7 +11,9 @@ from app.speech import rms_s16
 if TYPE_CHECKING:
     from app.core import Core
 
+
 def device_loop(core: Core, lang: str) -> None:
+    """Run a blocking arecord capture loop and speak replies with aplay."""
     if not shutil.which("arecord"):
         raise SystemExit("arecord is not installed")
     core.set_session(True)

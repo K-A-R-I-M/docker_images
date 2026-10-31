@@ -25,10 +25,12 @@ STATIC_FILES = {
 }
 
 class BodyTooLarge(Exception):
+    """Raised when a POST body exceeds MAX_BODY."""
     pass
 
 
 def serve(core: Core, host: str, port: int) -> None:
+    """Create the threaded HTTP server and block forever."""
     Handler.core = core
     server = ThreadingHTTPServer((host, port), Handler)
     server.daemon_threads = True
@@ -43,6 +45,8 @@ def serve(core: Core, host: str, port: int) -> None:
 
 
 class Handler(BaseHTTPRequestHandler):
+    """Route GET and POST requests to the API and static files."""
+
     core: Core
     server_version = "Jarvis/" + VERSION
 
@@ -51,6 +55,7 @@ class Handler(BaseHTTPRequestHandler):
             sys.stderr.write("jarvis: " + (fmt % args) + "\n")
 
     def do_GET(self) -> None:
+        """Serve pages, static assets, and read-only JSON endpoints."""
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         # The UI and the local renderer are public; /api routes are not.
@@ -129,12 +134,14 @@ class Handler(BaseHTTPRequestHandler):
 
     @staticmethod
     def _query_int(query: dict, name: str, default: int) -> int:
+        """Read an int query parameter, using default on bad input."""
         try:
             return int(query.get(name, [str(default)])[0])
         except (TypeError, ValueError):
             return default
 
     def _handle_export(self, parsed) -> None:
+        """Download all sessions and turns as one JSON file."""
         what = urllib.parse.parse_qs(parsed.query).get("what", ["all"])[0]
         if what not in ("all", "facts", "turns"):
             self._send_json(400, {"error": "what must be all, facts, or turns"})
@@ -155,6 +162,7 @@ class Handler(BaseHTTPRequestHandler):
         )
 
     def do_POST(self) -> None:
+        """Handle every mutating endpoint and the turn stream."""
         if not self._auth_ok():
             return
         parsed = urllib.parse.urlparse(self.path)
@@ -270,6 +278,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(500, {"error": str(exc)})
 
     def _handle_turn(self, parsed) -> None:
+        """Stream one turn as newline-delimited JSON events."""
         query = urllib.parse.parse_qs(parsed.query)
         stream = query.get("stream", ["0"])[0] in ("1", "true", "yes") or "text/event-stream" in self.headers.get("Accept", "")
         content_type = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
@@ -340,6 +349,7 @@ class Handler(BaseHTTPRequestHandler):
     _turn_lang = "auto"
 
     def _brain_info(self, provider: str | None = None) -> dict:
+        """Return provider, model, and pricing for the Brain tab."""
         providers = run_lines(["jcode", "provider", "list"])
         provider = provider or self.core.brain_config.get("provider", "")
         models = run_lines(["jcode", "model", "list", "-p", provider]) if provider else []
@@ -350,6 +360,7 @@ class Handler(BaseHTTPRequestHandler):
         }
 
     def _save_brain(self, data: dict) -> None:
+        """Validate and persist a brain settings update."""
         def clean(value: str) -> str:
             return re.sub(r"[^A-Za-z0-9._:/-]", "", str(value or ""))[:120]
 
@@ -371,6 +382,7 @@ class Handler(BaseHTTPRequestHandler):
         self.core.store.event("info", "brain", f"{provider}/{model}")
 
     def _test_brain(self, data: dict) -> dict:
+        """Send a tiny prompt to the chosen provider and report the reply."""
         provider = data.get("provider") or self.core.brain_config.get("provider")
         model = data.get("model") or self.core.brain_config.get("model")
         try:
@@ -387,6 +399,7 @@ class Handler(BaseHTTPRequestHandler):
             return {"ok": False, "error": str(exc)}
 
     def _auth_ok(self) -> bool:
+        """Return True when auth is disabled or the bearer token matches."""
         token = os.environ.get("JARVIS_TOKEN", "")
         if not token:
             return True
@@ -400,6 +413,7 @@ class Handler(BaseHTTPRequestHandler):
         return False
 
     def _read_body(self, limit: int = MAX_BODY) -> bytes:
+        """Read the request body, raising BodyTooLarge past the limit."""
         length = int(self.headers.get("Content-Length") or 0)
         if length > limit:
             self.close_connection = True
@@ -407,16 +421,19 @@ class Handler(BaseHTTPRequestHandler):
         return self.rfile.read(length)
 
     def _read_json(self) -> dict:
+        """Parse a JSON object body, returning {} for anything else."""
         body = self._read_body()
         if not body:
             return {}
         return json.loads(body.decode("utf-8"))
 
     def _send_json(self, code: int, payload: dict) -> None:
+        """Send a JSON response with no caching."""
         body = json.dumps(payload).encode("utf-8")
         self._send_bytes(code, body, "application/json; charset=utf-8")
 
     def _send_bytes(self, code: int, body: bytes, content_type: str, headers: dict | None = None) -> None:
+        """Send raw bytes with an explicit content type and headers."""
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))

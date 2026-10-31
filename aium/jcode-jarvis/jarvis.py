@@ -12,6 +12,7 @@ from app.supervisor import Supervisor
 
 
 def main() -> int:
+    """Parse args, build Core, start the supervisor, then serve or run device audio."""
     parser = argparse.ArgumentParser(description="Jarvis voice companion")
     parser.add_argument("--host", default=os.environ.get("JARVIS_HOST", "127.0.0.1"))
     parser.add_argument("--port", type=int, default=int(os.environ.get("JARVIS_PORT", "8765")))

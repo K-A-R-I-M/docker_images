@@ -19,11 +19,14 @@ DEFAULT_BRAIN = {
     "timeout_ms": 30000,
 }
 
+
 def now_iso() -> str:
+    """Return a local timestamp with its UTC offset."""
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
 def load_json(path: Path, default):
+    """Read JSON from disk, returning default on any error."""
     try:
         with path.open("r", encoding="utf-8") as handle:
             return json.load(handle)
@@ -32,6 +35,7 @@ def load_json(path: Path, default):
 
 
 def load_brain(path: Path) -> dict:
+    """Load brain TOML, then apply container env overrides."""
     config = dict(DEFAULT_BRAIN)
     try:
         with path.open("rb") as handle:
@@ -59,6 +63,7 @@ def load_brain(path: Path) -> dict:
 
 
 def save_brain(path: Path, config: dict) -> None:
+    """Write brain TOML atomically so a crash cannot truncate it."""
     fallback = ", ".join(json.dumps(item) for item in config.get("fallback", []))
     text = (
         "[brain]\n"
@@ -94,20 +99,24 @@ class Settings:
         self.load()
 
     def load(self) -> dict:
+        """Load from disk, ignoring invalid values."""
         data = load_json(self.path, None)
         if isinstance(data, dict):
             self.merge(data, save=False)
         return self.as_dict()
 
     def as_dict(self) -> dict:
+        """Return a copy of the current values."""
         with self.lock:
             return dict(self.values)
 
     def get(self, key: str, default=None):
+        """Read one setting with a fallback default."""
         with self.lock:
             return self.values.get(key, SETTINGS_DEFAULTS.get(key, default))
 
     def merge(self, data: dict, save: bool = True) -> dict:
+        """Validate and persist a partial settings update."""
         if not isinstance(data, dict):
             return self.as_dict()
         with self.lock:
@@ -125,6 +134,7 @@ class Settings:
             return dict(self.values)
 
     def save(self) -> None:
+        """Write settings atomically."""
         with self.lock:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             tmp = self.path.with_suffix(".tmp")

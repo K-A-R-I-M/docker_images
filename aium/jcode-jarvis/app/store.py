@@ -9,7 +9,10 @@ from pathlib import Path
 
 from app.config import now_iso
 
+
 class Store:
+    """SQLite storage for sessions, turns, facts, and events."""
+
     def __init__(self, path: Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -99,6 +102,7 @@ class Store:
         return self.new_session()
 
     def new_session(self) -> str:
+        """Close the open session and start a new one."""
         session_id = "s_" + datetime.now().strftime("%Y%m%d_%H%M%S")
         # Only one session is open; opening a new one closes the previous.
         with self.lock, self.conn:
@@ -111,6 +115,7 @@ class Store:
         return session_id
 
     def remember(self, text: str, tags: str = "") -> None:
+        """Store a fact once; repeated text only refreshes its last_used."""
         text = text.strip()[:1000]
         if not text:
             return
@@ -129,6 +134,7 @@ class Store:
         return " ".join('"' + token.replace('"', "") + '"' for token in tokens)
 
     def recall(self, query: str = "", limit: int = 5) -> list[dict]:
+        """Search facts, or return the newest facts when the query is empty."""
         with self.lock:
             if query.strip():
                 if self.fts:
@@ -156,6 +162,7 @@ class Store:
         return [dict(row) for row in rows]
 
     def recent_facts(self, limit: int = 5) -> list[str]:
+        """Return the newest fact strings for the brain prompt."""
         with self.lock:
             rows = self.conn.execute(
                 "SELECT text FROM facts ORDER BY id DESC LIMIT ?", (limit,)
@@ -163,6 +170,7 @@ class Store:
         return [str(row["text"]) for row in rows]
 
     def forget(self, query: str) -> int:
+        """Delete facts matching the query and return how many were removed."""
         query = query.strip()
         if not query:
             return 0
@@ -184,6 +192,7 @@ class Store:
         return len(ids)
 
     def forget_all(self) -> None:
+        """Delete all local data and start a fresh session."""
         with self.lock, self.conn:
             self.conn.execute("DELETE FROM facts")
             self.conn.execute("DELETE FROM turns")
@@ -192,6 +201,7 @@ class Store:
         self.session_id = self.new_session()
 
     def delete_fact(self, fact_id: int) -> int:
+        """Delete exactly one fact by id, leaving similar text alone."""
         try:
             fact_id = int(fact_id)
         except (TypeError, ValueError):
@@ -239,6 +249,7 @@ class Store:
             )
 
     def last_turns(self, limit: int = 4) -> list[tuple[str, str]]:
+        """Return the last few role/text pairs for the brain prompt."""
         with self.lock:
             rows = self.conn.execute(
                 "SELECT role, text FROM turns WHERE session_id = ? ORDER BY id DESC LIMIT ?",
@@ -247,6 +258,7 @@ class Store:
         return [(str(row["role"]), str(row["text"])) for row in reversed(rows)]
 
     def session_cost(self) -> float:
+        """Return the total cloud cost of the current session."""
         with self.lock:
             row = self.conn.execute(
                 "SELECT cost_usd FROM sessions WHERE id = ?", (self.session_id,)
@@ -254,6 +266,7 @@ class Store:
         return float(row["cost_usd"] or 0) if row else 0.0
 
     def session_turns(self) -> int:
+        """Return the number of assistant turns in the current session."""
         with self.lock:
             row = self.conn.execute(
                 "SELECT COUNT(*) AS n FROM turns WHERE session_id = ? AND role = 'assistant'",
@@ -262,11 +275,13 @@ class Store:
         return int(row["n"] or 0) if row else 0
 
     def facts_count(self) -> int:
+        """Return the total number of stored facts."""
         with self.lock:
             row = self.conn.execute("SELECT COUNT(*) AS n FROM facts").fetchone()
         return int(row["n"] or 0)
 
     def db_size(self) -> int:
+        """Return the database file size in bytes."""
         try:
             return self.path.stat().st_size
         except OSError:
@@ -303,6 +318,7 @@ class Store:
     )
 
     def history(self, limit: int = 50, all_sessions: bool = False) -> list[dict]:
+        """Return turns oldest first, current session unless all_sessions."""
         limit = self._clamp_int(limit, 50, 1, 200)
         with self.lock:
             if all_sessions:
@@ -320,6 +336,7 @@ class Store:
         return [self._turn_dict(row) for row in reversed(rows)]
 
     def all_turns(self) -> list[dict]:
+        """Return every turn oldest first for export."""
         with self.lock:
             rows = self.conn.execute(
                 f"SELECT {self._TURN_COLUMNS} FROM turns ORDER BY id ASC"
@@ -327,6 +344,7 @@ class Store:
         return [self._turn_dict(row) for row in rows]
 
     def export_sessions(self) -> list[dict]:
+        """Return session rows for export."""
         with self.lock:
             rows = self.conn.execute(
                 "SELECT id, started_at, ended_at, turns, cost_usd FROM sessions ORDER BY started_at ASC"
@@ -334,6 +352,7 @@ class Store:
         return [dict(row) for row in rows]
 
     def cost_by_day(self, days: int = 7) -> list[dict]:
+        """Return per-day cost and turn counts in the host's local dates."""
         days = self._clamp_int(days, 7, 1, 90)
         today = date.today()
         start = today - timedelta(days=days - 1)
@@ -357,6 +376,7 @@ class Store:
         return out
 
     def spend_today(self) -> float:
+        """Return today's assistant cost in the host's local date."""
         with self.lock:
             row = self.conn.execute(
                 "SELECT COALESCE(SUM(cost_usd), 0) AS cost FROM turns "
@@ -365,6 +385,7 @@ class Store:
         return float(row["cost"] or 0) if row else 0.0
 
     def last_assistant_cost(self) -> float:
+        """Return the most recent assistant turn cost."""
         with self.lock:
             row = self.conn.execute(
                 "SELECT cost_usd FROM turns WHERE session_id = ? AND role = 'assistant' "
@@ -374,6 +395,7 @@ class Store:
         return float(row["cost_usd"] or 0) if row else 0.0
 
     def event(self, level: str, event: str, detail: str = "") -> None:
+        """Append an event and keep only the newest 200."""
         with self.lock, self.conn:
             self.conn.execute(
                 "INSERT INTO events (level, event, detail, ts) VALUES (?, ?, ?, ?)",
@@ -384,6 +406,7 @@ class Store:
             )
 
     def events(self, limit: int = 20) -> list[dict]:
+        """Return the newest events, newest first."""
         with self.lock:
             rows = self.conn.execute(
                 "SELECT level, event, detail, ts FROM events ORDER BY id DESC LIMIT ?", (limit,)
@@ -391,6 +414,7 @@ class Store:
         return [dict(row) for row in rows]
 
     def close(self) -> None:
+        """Close the SQLite connection."""
         with self.lock:
             self.conn.close()
 

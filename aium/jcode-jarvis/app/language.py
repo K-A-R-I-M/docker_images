@@ -18,7 +18,10 @@ EN_WORDS = {
     "yes", "no", "hello", "hi", "thanks", "please", "remember", "forget",
     "time", "date", "stop", "goodbye", "bye",
 }
+
+
 def detect_lang(text: str, forced: str = "auto") -> str:
+    """Return fr or en; a forced language wins, otherwise score common words."""
     forced = (forced or "auto").lower()
     if forced in ("en", "fr"):
         return forced

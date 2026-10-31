@@ -20,7 +20,10 @@ from app.speech import Speech, SpeechFence
 from app.store import Store
 from app.supervisor import check_http, check_port
 
+
 class Core:
+    """Shared state for the server: settings, memory, speech, and brain."""
+
     def __init__(self, args: argparse.Namespace):
         self.data_dir = Path(args.data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -63,11 +66,13 @@ class Core:
         self.started_ts = time.time()
 
     def set_session(self, enabled: bool) -> None:
+        """Enable or disable listening and record it in the event feed."""
         self.session_enabled = bool(enabled)
         self.state = "listening" if enabled else "idle"
         self.store.event("info", "session", "enabled" if enabled else "disabled")
 
     def status(self) -> dict:
+        """Return the status payload used by the panel and top bar."""
         return {
             "state": self.state,
             "session": self.session_enabled,
@@ -93,6 +98,7 @@ class Core:
         }
 
     def settings_dict(self) -> dict:
+        """Return speech settings plus the resolved profile values."""
         values = self.settings.as_dict()
         return {
             "tts": bool(values.get("tts", True)),
@@ -104,6 +110,7 @@ class Core:
         }
 
     def apply_settings(self) -> None:
+        """Resolve language and voice, dropping unknown values."""
         # Sanitize the name so it cannot escape the voices directory.
         for code in ("en", "fr"):
             self.voice_names[code] = self.default_voice_names[code]
@@ -115,6 +122,7 @@ class Core:
                 self.voice_paths[code] = str(voices_dir / (chosen + ".onnx"))
 
     def health(self) -> dict:
+        """Return the four health checks with latency in ms."""
         whisper = check_port(self.whisper_url)
         piper = check_http(self.piper_url.rstrip("/") + "/info")
         jcode = shutil.which("jcode") is not None
@@ -129,6 +137,7 @@ class Core:
         }
 
     def machine_usage(self) -> dict | None:
+        """Sample CPU, memory, and disk for the host."""
         now = time.time()
         # Cache for five minutes; spawning jcode usage is slow.
         if now - self.usage_cache[0] < 300 and self.usage_cache[1] is not None:
@@ -157,6 +166,7 @@ class Core:
             return None
 
     def turn(self, text: str | None = None, pcm: bytes | None = None, lang: str = "auto", emit=None) -> dict:
+        """Run one turn end to end and return the stored turn plus reply."""
         # One turn at a time; a concurrent request gets 409.
         if not self.turn_lock.acquire(blocking=False):
             raise BusyError("a turn is already running")
@@ -255,6 +265,7 @@ class Core:
 
     @staticmethod
     def emit(emit, event: dict) -> None:
+        """Call an optional event callback without letting it break the turn."""
         if emit:
             try:
                 emit(event)

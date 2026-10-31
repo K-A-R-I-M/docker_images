@@ -1,7 +1,9 @@
 """Token pricing math."""
 from __future__ import annotations
 
+
 def compute_cost(pricing: dict, provider: str, model: str, usage: dict | None) -> float | None:
+    """Return USD cost for a usage record, or None when unpriced."""
     if not usage:
         return None
     rates = (

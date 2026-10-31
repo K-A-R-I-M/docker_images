@@ -14,11 +14,14 @@ from app.speech import SentenceBuffer
 if TYPE_CHECKING:
     from app.core import Core
 
+
 class BrainError(RuntimeError):
     pass
 
 
 class BrainResult:
+    """One completed reply with usage, cost, and timing."""
+
     def __init__(self, text: str, provider: str, model: str, usage: dict, cost: float | None, ttft_ms: int):
         self.text = text
         self.provider = provider
@@ -29,10 +32,13 @@ class BrainResult:
 
 
 class Brain:
+    """Run jcode with the fallback chain and stream its output."""
+
     def __init__(self, core: "Core"):
         self.core = core
 
     def candidates(self) -> list[tuple[str, str]]:
+        """Return configured provider/model pairs, de-duplicated."""
         config = self.core.brain_config
         out = [(config.get("provider", ""), config.get("model", ""))]
         for item in config.get("fallback", []):
@@ -51,6 +57,7 @@ class Brain:
         return unique
 
     def build_prompt(self, text: str, lang: str) -> str:
+        """Compose facts, recent turns, and the language instruction."""
         store = self.core.store
         facts = store.recent_facts(6)
         turns = store.last_turns(4)
@@ -72,6 +79,7 @@ class Brain:
         return "\n".join(parts)
 
     def complete(self, text: str, lang: str, on_delta=None, on_sentence=None) -> BrainResult:
+        """Try candidates until one emits a token, otherwise raise BrainError."""
         prompt = self.build_prompt(text, lang)
         errors = []
         # Only fall back before the first token; a partial reply must not be retried.
@@ -98,6 +106,7 @@ class Brain:
         raise BrainError("; ".join(errors[-3:]) or "brain unavailable")
 
     def run_jcode(self, provider: str, model: str, prompt: str, on_delta, on_sentence) -> BrainResult:
+        """Stream jcode NDJSON, emitting text deltas and speakable sentences."""
         if self.core.brain_config.get("backend", "jcode") == "mock":
             text = "This is a mock reply."
             if on_delta:

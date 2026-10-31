@@ -15,7 +15,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.core import Core
 
+
 def check_http(url: str, timeout: float = 1.0) -> bool:
+    """Return True when the URL answers with a 2xx status."""
     try:
         with urllib.request.urlopen(url, timeout=timeout) as response:
             response.read(64)
@@ -25,6 +27,7 @@ def check_http(url: str, timeout: float = 1.0) -> bool:
 
 
 def check_port(url: str, timeout: float = 0.5) -> bool:
+    """Return True when the host and port accept a TCP connection."""
     try:
         parsed = urllib.parse.urlparse(url)
         host = parsed.hostname or "127.0.0.1"
@@ -36,6 +39,7 @@ def check_port(url: str, timeout: float = 0.5) -> bool:
 
 
 def run_lines(cmd: list[str], timeout: float = 6.0) -> list[str]:
+    """Run a command and return its stdout lines, or [] on any failure."""
     try:
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=timeout,
@@ -49,6 +53,8 @@ def run_lines(cmd: list[str], timeout: float = 6.0) -> list[str]:
 
 
 class Supervisor:
+    """Start whisper and Piper, then restart them only after a crash."""
+
     def __init__(self, core: Core, enabled: bool):
         self.core = core
         self.enabled = enabled
@@ -68,6 +74,7 @@ class Supervisor:
         self.specs.append((name, cmd, self._spawn(name, cmd)))
 
     def start(self) -> None:
+        """Spawn the enabled children; SQLite stays open for the server."""
         if not self.enabled:
             return
         whisper_bin = os.environ.get("JARVIS_WHISPER_BIN", "/opt/whisper/whisper-server")
@@ -119,6 +126,7 @@ class Supervisor:
                     self.core.store.event("error", "supervisor", f"{name} restart failed: {exc}")
 
     def close(self) -> None:
+        """Terminate every child and join the watcher."""
         self.stop.set()
         for _name, _cmd, proc in self.specs:
             try:

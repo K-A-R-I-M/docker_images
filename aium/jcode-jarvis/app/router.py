@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.store import Store
 
+
 class Route:
+    """One local decision: optional reply text, action, and language."""
+
     def __init__(self, reply: str | None = None, action: str = "", lang: str = "en"):
         self.reply = reply
         self.action = action
@@ -19,6 +22,7 @@ class Router:
     """Small local intents. Everything else goes to the brain."""
 
     def route(self, text: str, lang: str, store: Store) -> Route:
+        """Match canned intents; a None reply means use the cloud brain."""
         # Order matters: stop and goodbye must win over greetings and memory verbs.
         raw = text.strip()
         low = raw.lower()

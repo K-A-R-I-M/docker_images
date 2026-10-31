@@ -17,7 +17,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.core import Core
 
+
 def pcm_to_wav(pcm: bytes, rate: int = 16000, channels: int = 1, width: int = 2) -> bytes:
+    """Wrap raw PCM in a WAV container for whisper and Piper."""
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wav:
         wav.setnchannels(channels)
@@ -28,6 +30,7 @@ def pcm_to_wav(pcm: bytes, rate: int = 16000, channels: int = 1, width: int = 2)
 
 
 def rms_s16(data: bytes) -> float:
+    """Return the RMS level of little-endian 16-bit samples."""
     if len(data) < 2:
         return 0.0
     samples = array.array("h")
@@ -35,21 +38,6 @@ def rms_s16(data: bytes) -> float:
     if not samples:
         return 0.0
     return math.sqrt(sum(x * x for x in samples) / len(samples))
-
-
-def detect_lang(text: str, forced: str = "auto") -> str:
-    forced = (forced or "auto").lower()
-    if forced in ("en", "fr"):
-        return forced
-    low = text.lower()
-    if re.search(r"[àâçéèêëîïôûùüÿœ]", low):
-        return "fr"
-    words = re.findall(r"[a-zàâçéèêëîïôûùüÿœ']+", low)
-    if not words:
-        return "en"
-    fr = sum(1 for w in words if w in FR_WORDS)
-    en = sum(1 for w in words if w in EN_WORDS)
-    return "fr" if fr > en else "en"
 
 
 class SpeechFence:
@@ -104,10 +92,13 @@ class SpeechError(RuntimeError):
 
 
 class Speech:
+    """Local speech: whisper for input, Piper for output."""
+
     def __init__(self, core: "Core"):
         self.core = core
 
     def transcribe(self, pcm: bytes, lang: str = "auto") -> tuple[str, str]:
+        """Transcribe PCM, preferring the server and falling back to the CLI."""
         wav = pcm_to_wav(pcm)
         # Prefer the warm server; the CLI is the cold fallback.
         try:
@@ -117,6 +108,7 @@ class Speech:
         return self._cli_stt(wav, lang)
 
     def _server_stt(self, wav: bytes, lang: str) -> tuple[str, str]:
+        """POST a WAV to whisper-server and parse its JSON reply."""
         # curl keeps multipart upload and timeouts in one place.
         with tempfile.NamedTemporaryFile(suffix=".wav") as handle:
             handle.write(wav)
@@ -140,6 +132,7 @@ class Speech:
             return text, data.get("language") or lang
 
     def _cli_stt(self, wav: bytes, lang: str) -> tuple[str, str]:
+        """Run whisper-cli when the warm server is unavailable."""
         binary = self.core.whisper_cli
         model = self.core.whisper_model
         if not binary or not model or not Path(binary).exists() or not Path(model).exists():
@@ -159,6 +152,7 @@ class Speech:
             return text, lang
 
     def synthesize(self, text: str, lang: str) -> bytes:
+        """Return WAV bytes from Piper, falling back to its CLI."""
         text = (text or "").strip()
         if not text:
             return b""
@@ -183,6 +177,7 @@ class Speech:
         return self._cli_tts(text, voice_path)
 
     def _cli_tts(self, text: str, voice: str) -> bytes:
+        """Run the Piper module when its HTTP server fails."""
         if not voice:
             raise SpeechError("no piper voice available")
         with tempfile.NamedTemporaryFile(suffix=".wav") as handle:

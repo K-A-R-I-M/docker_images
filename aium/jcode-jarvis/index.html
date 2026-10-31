@@ -340,7 +340,7 @@
     <span id="topBrain" class="chip mono" title="Brain">—</span>
     <span id="topSpend" class="chip mono" title="Cloud spend today">$0.00</span>
     <span class="spacer"></span>
-    <div class="dots" aria-label="Subsystem health">
+    <div class="dots" role="group" aria-label="Subsystem health">
       <button class="dot" id="dotWhisper" data-key="whisper" aria-label="Whisper status">W</button>
       <button class="dot" id="dotPiper" data-key="piper" aria-label="Piper status">P</button>
       <button class="dot" id="dotJcode" data-key="jcode" aria-label="jcode status">J</button>
@@ -376,7 +376,7 @@
 
         <div class="convo-pane">
           <div id="transcript" class="transcript" role="log" aria-live="off" aria-label="Conversation"></div>
-          <div id="breakdown" class="breakdown" aria-label="Last turn"></div>
+          <div id="breakdown" class="breakdown" role="group" aria-label="Last turn"></div>
           <div class="composer">
             <input id="textInput" type="text" autocomplete="off" placeholder="Type a message instead of speaking" aria-label="Type a message">
             <button id="sendText" class="act primary">Send</button>
@@ -458,7 +458,7 @@
             <div class="stat"><div class="k">Last turn</div><div class="v" id="costLast">—</div></div>
           </div>
           <h2>Last 7 days</h2>
-          <div id="costChart" class="chart" aria-label="Cost per day, last 7 days"></div>
+          <div id="costChart" class="chart" role="img" aria-label="Cost per day, last 7 days"></div>
           <h2 style="margin-top:14px">Recent turns</h2>
           <div class="table-wrap" style="overflow-x:auto">
             <table>
@@ -1623,6 +1623,10 @@
   document.querySelectorAll("#transcript, #eventFeed, .tabpanel, .log-list, .table-wrap").forEach((el) => { el.tabIndex = 0; });
   const initialTab = location.hash.slice(1);
   if (["brain", "voice", "memory", "cost", "system", "logs"].includes(initialTab)) activateTab(initialTab);
+  window.addEventListener("hashchange", () => {
+    const name = location.hash.slice(1);
+    if (["brain", "voice", "memory", "cost", "system", "logs"].includes(name) && name !== state.tab) activateTab(name);
+  });
   refreshSettings();
   refreshStatus();
   refreshHealth();

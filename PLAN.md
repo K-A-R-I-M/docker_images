@@ -201,6 +201,25 @@ See "Verification limits".
   scrollable regions. axe-core now reports zero violations of any impact.
 - Chart: zero-cost days no longer draw a 2 px line; only their labels remain.
 
+## Deep validation 3 (2026-10-31 20:31)
+
+- Backend, 20 checks, 0 failures: cost-day bucketing under `TZ=America/New_York`
+  vs `TZ=UTC` for turns that cross local midnight, `X-Jarvis-Token` accepted,
+  wrong token rejected, 24 concurrent settings posts with a valid file and no
+  temp leftovers, unicode turn through the live brain (one real DeepSeek turn,
+  about $0.0006), TTS 503 plus a logged piper warning, export sections/counts
+  and no credential fields, history `all=1|true|yes`, idle cancel.
+- Browser, 44 checks, 0 failures: deep links for all six tabs, rapid tab
+  switching, no horizontal scroll per tab at 440 px, resize round trip, invalid
+  saved microphone falling back and clearing storage, file export download
+  parsed from disk, forget-all clearing transcript and cost, dark-mode axe with
+  zero violations, reduced-motion transitions at 0.001 ms, wrong then correct
+  token, microphone absent/blocked UX.
+- Found and fixed: changing the URL hash on an already-loaded page did not
+  switch tabs; added a `hashchange` handler.
+- Found and fixed: `aria-label` on plain divs (dots, breakdown, chart) was an
+  axe `aria-prohibited-attr` violation; added `group`/`img` roles.
+
 ## Verification limits
 
 This environment initially had no `python3`, no `podman`, and no browser

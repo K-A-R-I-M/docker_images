@@ -1479,6 +1479,7 @@ class Handler(BaseHTTPRequestHandler):
                 data = self._read_json()
                 if data.get("all"):
                     self.core.store.forget_all()
+                    self.core.last_turn = None
                 else:
                     self.core.store.forget(str(data.get("query", "")))
                 self._send_json(200, {"ok": True, "facts": self.core.store.facts_count()})
@@ -1493,6 +1494,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(409, {"error": "a turn is already running"})
         except BodyTooLarge:
             self._send_json(413, {"error": "request too large"})
+        except ValueError as exc:
+            self._send_json(400, {"error": str(exc) or "invalid request"})
         except SpeechError as exc:
             self._send_json(503, {"error": str(exc)})
         except BrokenPipeError:

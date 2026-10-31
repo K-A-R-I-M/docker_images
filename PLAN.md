@@ -220,6 +220,28 @@ See "Verification limits".
 - Found and fixed: `aria-label` on plain divs (dots, breakdown, chart) was an
   axe `aria-prohibited-attr` violation; added `group`/`img` roles.
 
+## Deep validation 4 (2026-10-31 20:39)
+
+- Backend, 27 checks, 0 failures: SSE content type, frame formatting, event
+  order (transcript first, done last), one done with timings; two concurrent
+  turns answer or 409 with the lock released afterwards; strict health 503;
+  usage, session toggle, brain info shape, switch and persistence across
+  restart; bad brain test returns JSON rather than 500; empty chat rejected;
+  last-turn cleared by forget-all; empty export; negative clamps.
+- Found and fixed: `ValueError` escaped as 500 for empty turns, empty brain
+  config, and malformed JSON; `do_POST` now maps it to 400.
+- Found and fixed: `forget all` left `status.last_turn` pointing at a deleted
+  turn; the handler clears it.
+- Browser, 17 checks, 0 failures: 50-message transcript cap keeps the newest
+  messages and opens at the bottom; health dot opens System; `/` focuses the
+  composer; Escape is stable; TTS setting survives reload; export copy reports
+  an outcome; a new turn stays followed at the bottom.
+- Found and fixed: reopening Voice or Brain re-fetched and overwrote unsaved
+  edits; tabs now fetch each form once, and a save syncs only the fields it
+  saved.
+- Added a regression test for the empty-turn 400 path and lock release (17
+  tests).
+
 ## Verification limits
 
 This environment initially had no `python3`, no `podman`, and no browser

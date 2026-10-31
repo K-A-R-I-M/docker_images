@@ -9,9 +9,9 @@ Updated: 2026-10-31 20:15
 - Built: panel shell (Now, Live rail, six tabs), backend endpoints
   `/api/history`, `/api/cost`, `/api/settings`, `/api/export`,
   `/api/facts`, `/api/facts/forget`; settings file; status fields.
-- Verified: 16 unit tests pass; selftest PASS. Backend probes 36 + 31 + 20,
-  browser flows 43 + 27 + 44 checks, all 0 failures. axe zero violations in
-  light and dark. Fixed hash navigation and aria-prohibited-attr.
+- Verified: 17 unit tests pass; selftest PASS. Backend probes 36 + 31 + 20 + 27,
+  browser flows 43 + 27 + 44 + 17, all 0 failures. axe zero violations light
+  and dark. Fixed 400 mapping, last_turn reset, and unsaved tab edits.
 - Blocked: image rebuild needs podman; real mic and Piper audio need hardware.
 
 ## Next step
@@ -42,3 +42,6 @@ Updated: 2026-10-31 20:15
 - 2026-10-31 20:32 - Third pass: timezone buckets, concurrent settings, export
   download, dark axe, denied mic; backend 20 and browser 44 checks, 0 failures.
   Fixed hash navigation and aria roles.
+- 2026-10-31 20:39 - Fourth pass: SSE contract, concurrent turns, brain switch
+  persistence, transcript cap, tab edit retention; backend 27 and browser 17
+  checks, 0 failures. Fixed 400 mapping, last_turn reset, unsaved tab edits.

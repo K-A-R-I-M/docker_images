@@ -556,6 +556,8 @@
     lastMicError: "",
     tab: "brain",
     pollTimer: null,
+    settingsLoaded: false,
+    brainLoaded: false,
   };
 
   const icons = {
@@ -1238,6 +1240,7 @@
       fillSelect($("modelSel"), (data.models || []).map((m) => ({ value: m, label: m })), data.config?.model || "");
       $("brainStatus").textContent = "Current: " + (data.config?.provider || "—") + "/" + (data.config?.model || "—");
       $("brainFallback").textContent = (data.config?.fallback || []).join(", ") || "none";
+      state.brainLoaded = true;
     } catch (error) {
       $("brainStatus").textContent = error.message;
     }
@@ -1278,6 +1281,7 @@
       $("voiceFr").value = data.voice_fr || "";
       $("voiceModel").textContent = data.whisper_model || "—";
       $("voiceProfile").textContent = data.profile || "—";
+      state.settingsLoaded = true;
     } catch (_) {}
   }
 
@@ -1288,6 +1292,13 @@
       state.lang = data.lang || state.lang;
       $("langChip").textContent = state.lang === "auto" ? "Auto" : state.lang.toUpperCase();
       $("voiceStatus").textContent = "Saved. Applies to the next turn.";
+      const sync = { lang: $("langSel"), tts: $("ttsSel"), voice_en: $("voiceEn"), voice_fr: $("voiceFr") };
+      Object.keys(partial).forEach((key) => {
+        if (key === "lang") sync.lang.value = data.lang;
+        else if (key === "tts") sync.tts.value = data.tts === false ? "off" : "on";
+        else if (key === "voice_en") sync.voice_en.value = data.voice_en || "";
+        else if (key === "voice_fr") sync.voice_fr.value = data.voice_fr || "";
+      });
       return data;
     } catch (error) {
       $("voiceStatus").textContent = error.message;
@@ -1440,8 +1451,8 @@
     document.querySelectorAll(".tabpanel").forEach((panel) => {
       panel.hidden = panel.id !== "panel-" + name;
     });
-    if (name === "brain") refreshBrain();
-    else if (name === "voice") { refreshSettings(); refreshMics(); refreshMicDiag(); }
+    if (name === "brain") { if (!state.brainLoaded) refreshBrain(); }
+    else if (name === "voice") { refreshMics(); refreshMicDiag(); if (!state.settingsLoaded) refreshSettings(); }
     else if (name === "memory") refreshFacts();
     else if (name === "cost") refreshCost();
     else if (name === "system") refreshStatus();

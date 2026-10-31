@@ -267,6 +267,14 @@ class JarvisTests(unittest.TestCase):
             self.assertTrue(core.voice_paths["en"].endswith(".onnx"))
             core.store.close()
 
+    def test_empty_turn_raises_and_releases_lock(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            core = jarvis.Core(argparse.Namespace(data_dir=tmp))
+            for _ in range(2):
+                with self.assertRaises(ValueError):
+                    core.turn(text="")
+            core.store.close()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -240,6 +240,33 @@ class JarvisTests(unittest.TestCase):
             self.assertEqual(store.facts_count(), 1)
             store.close()
 
+    def test_cost_by_day_buckets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = jarvis.Store(Path(tmp) / "test.db")
+            store.add_turn("user", "question", "en")
+            store.add_turn("assistant", "paid reply", "en", cost=0.5)
+            with store.lock, store.conn:
+                store.conn.execute(
+                    "UPDATE turns SET ts = ? WHERE role = 'assistant'",
+                    ((date.today() - timedelta(days=2)).isoformat() + "T12:00:00+00:00",),
+                )
+            days = store.cost_by_day(3)
+            self.assertEqual([day["cost_usd"] for day in days], [0.5, 0.0, 0.0])
+            self.assertEqual([day["turns"] for day in days], [1, 0, 0])
+            self.assertEqual(store.spend_today(), 0.0)
+            self.assertEqual(store.last_assistant_cost(), 0.5)
+            store.close()
+
+    def test_voice_setting_cannot_escape_voice_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            core = jarvis.Core(argparse.Namespace(data_dir=tmp))
+            core.settings.merge({"voice_en": "../../etc/passwd"})
+            core.apply_settings()
+            self.assertNotIn("/", core.voice_names["en"])
+            self.assertEqual(Path(core.voice_paths["en"]).parent, Path("/opt/piper/voices"))
+            self.assertTrue(core.voice_paths["en"].endswith(".onnx"))
+            core.store.close()
+
 
 if __name__ == "__main__":
     unittest.main()

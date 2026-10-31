@@ -162,6 +162,25 @@ See "Verification limits".
 - Impeccable detector: no findings. JS bracket balance and id cross-check clean.
 - Pending: image rebuild (no podman here) and real microphone/Piper on hardware.
 
+## Deep validation (2026-10-31 20:23)
+
+- Backend edge probe, 36 checks, 0 failures: history/per-turn clamps, ordering,
+  multi-session history, day buckets across three days, assistant-only cost
+  counting, spend-today isolation, corrupt and invalid settings, partial
+  persistence, voice-name sanitizing (no path escape), auth 401/200 on GET and
+  POST, 400 on invalid JSON/empty fact/bad export, 404-free bad limits, export
+  attachment header and no token leakage, TTS 409 when off, no audio in SSE
+  when off, settings language applied to an auto turn, uptime increasing.
+- Browser flow, 43 checks, 0 failures: page reaches Ready, health rows and
+  labels, live empty state, no horizontal scroll at 1440 and 440, tab switching
+  plus hash deep links, fake-microphone session start/stop with permission
+  reported granted, text turn answering with transcript and breakdown, memory
+  add and per-fact forget, cost table and zero-spend state, system rows, log
+  filter, live rail updating, TTS off through the UI and a full turn after it,
+  Space shortcut, mobile layout, zero severe console errors.
+- Fixed: favicon 404 was the only console error; now an inline SVG icon.
+- Added two regression tests (day buckets, voice path sanitizing): 16 tests.
+
 ## Verification limits
 
 This environment initially had no `python3`, no `podman`, and no browser

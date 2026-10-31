@@ -65,7 +65,7 @@
     border-bottom: 1px solid var(--line);
     flex-wrap: wrap;
   }
-  .brand { font-weight: 650; letter-spacing: .01em; margin-right: 4px; }
+  .brand { font-weight: 650; letter-spacing: .01em; margin: 0 4px 0 0; font-size: 15px; }
   .spacer { flex: 1; }
   .chip {
     appearance: none;
@@ -334,7 +334,7 @@
 <body data-state="idle">
 <div class="app">
   <header class="topbar">
-    <div class="brand">Jarvis</div>
+    <h1 class="brand">Jarvis</h1>
     <span id="stateChip" class="chip" data-state="idle">Ready</span>
     <button id="sessionBtn" class="act primary" aria-label="Start session">Start</button>
     <span id="topBrain" class="chip mono" title="Brain">—</span>
@@ -349,7 +349,7 @@
     <button id="langChip" class="chip" aria-label="Language, click to cycle">Auto</button>
   </header>
 
-  <div class="workspace">
+  <main class="workspace">
     <div id="banner" class="banner" role="alert"></div>
 
     <div class="main">
@@ -460,7 +460,7 @@
           <h2>Last 7 days</h2>
           <div id="costChart" class="chart" aria-label="Cost per day, last 7 days"></div>
           <h2 style="margin-top:14px">Recent turns</h2>
-          <div style="overflow-x:auto">
+          <div class="table-wrap" style="overflow-x:auto">
             <table>
               <thead><tr><th>Time</th><th>Model</th><th class="num">Total</th><th class="num">Tokens</th><th class="num">Cost</th></tr></thead>
               <tbody id="costTable"></tbody>
@@ -509,7 +509,7 @@
       </section>
       <p class="privacy">Audio stays on this device. Cloud gets text only.</p>
     </aside>
-  </div>
+  </main>
 </div>
 
 <script>
@@ -1111,6 +1111,11 @@
       state.status = data;
       $("topBrain").textContent = (data.brain?.provider || "—") + "/" + (data.brain?.model || "—");
       $("topSpend").textContent = money(data.spend_today ?? data.cost_usd);
+      if ($("stateChip").textContent === "Offline") {
+        const labels = { idle: "Ready", listening: "Listening", thinking: "Thinking", speaking: "Speaking", error: "Microphone blocked" };
+        $("stateChip").textContent = labels[state.ui] || "Ready";
+        $("stateChip").dataset.state = state.ui;
+      }
       if (!data.brain) return;
       const rows = [
         ["State", data.state],
@@ -1315,6 +1320,7 @@
         const fill = document.createElement("div");
         fill.className = "fill";
         fill.style.height = Math.max(2, Math.round((Number(day.cost_usd || 0) / max) * 68)) + "px";
+        fill.style.display = Number(day.cost_usd || 0) > 0 ? "" : "none";
         const label = document.createElement("div");
         label.className = "lbl";
         label.textContent = (day.date || "").slice(5);
@@ -1614,6 +1620,7 @@
 
   setLevel(0);
   setState("idle", "Ready");
+  document.querySelectorAll("#transcript, #eventFeed, .tabpanel, .log-list, .table-wrap").forEach((el) => { el.tabIndex = 0; });
   const initialTab = location.hash.slice(1);
   if (["brain", "voice", "memory", "cost", "system", "logs"].includes(initialTab)) activateTab(initialTab);
   refreshSettings();

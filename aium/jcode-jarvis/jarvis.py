@@ -61,6 +61,10 @@ EN_WORDS = {
 MAX_BODY = 16 * 1024 * 1024
 
 
+class BodyTooLarge(Exception):
+    pass
+
+
 def now_iso() -> str:
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
@@ -1487,6 +1491,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(404, {"error": "not found"})
         except BusyError:
             self._send_json(409, {"error": "a turn is already running"})
+        except BodyTooLarge:
+            self._send_json(413, {"error": "request too large"})
         except SpeechError as exc:
             self._send_json(503, {"error": str(exc)})
         except BrokenPipeError:
@@ -1615,7 +1621,8 @@ class Handler(BaseHTTPRequestHandler):
     def _read_body(self, limit: int = MAX_BODY) -> bytes:
         length = int(self.headers.get("Content-Length") or 0)
         if length > limit:
-            raise ValueError("request too large")
+            self.close_connection = True
+            raise BodyTooLarge()
         return self.rfile.read(length)
 
     def _read_json(self) -> dict:

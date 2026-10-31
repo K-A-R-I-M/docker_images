@@ -9,9 +9,9 @@ Updated: 2026-10-31 20:15
 - Built: panel shell (Now, Live rail, six tabs), backend endpoints
   `/api/history`, `/api/cost`, `/api/settings`, `/api/export`,
   `/api/facts`, `/api/facts/forget`; settings file; status fields.
-- Verified: 16 unit tests pass; selftest PASS; 36-check backend edge probe and
-  43-check Selenium browser flow both 0 failures (fake mic, tabs, memory,
-  cost, logs, TTS off, keyboard, mobile, no console errors).
+- Verified: 16 unit tests pass; selftest PASS. Backend probes 36 + 31 checks,
+  browser flows 43 + 27 checks, all 0 failures. axe: zero violations. Fixed
+  offline chip recovery and 413 for oversized bodies.
 - Blocked: image rebuild needs podman; real mic and Piper audio need hardware.
 
 ## Next step
@@ -36,3 +36,6 @@ Updated: 2026-10-31 20:15
   select, stale mic device, TTS-off fallback.
 - 2026-10-31 20:23 - Deep validation: 36 backend edge checks and 43 Selenium
   browser checks, 0 failures. Fixed favicon 404; added 2 regression tests.
+- 2026-10-31 20:28 - Second pass: concurrency, perf, restart persistence,
+  axe, reconnect, token flow; backend 31 and browser 27 checks, 0 failures.
+  Fixed 413 for oversized bodies, Offline chip recovery, chart zero days.

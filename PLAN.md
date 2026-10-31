@@ -181,6 +181,26 @@ See "Verification limits".
 - Fixed: favicon 404 was the only console error; now an inline SVG icon.
 - Added two regression tests (day buckets, voice path sanitizing): 16 tests.
 
+## Deep validation 2 (2026-10-31 20:27)
+
+- Backend, 31 checks, 0 failures: 10 concurrent writers plus 2 readers with no
+  errors and exact row/cost totals, session rollover, 6000-row insert and
+  `history(50)`/`cost_by_day` under 100 ms, unicode facts over HTTP, 1000-char
+  fact cap, traversal and unknown-method rejection, JSON content type and
+  `no-store`, settings persistence across a server restart, TTS-off surviving
+  restart, forget-all leaving a fresh session.
+- Found and fixed: an oversized request body returned 500; now `BodyTooLarge`
+  returns 413 and closes the connection.
+- Browser, 27 checks, 0 failures: health dots mirror `/api/health`, nonzero cost
+  chart bars and totals from seeded turns, keyboard arrow navigation, long
+  unbreakable fact and turn without horizontal scroll, forget-all confirm,
+  live rail updating on the 5 s poll, offline then reconnect, token gate and
+  persistence across reload.
+- Found and fixed: the state chip stayed "Offline" after the server returned.
+- Accessibility: added a `<main>` landmark, an `h1`, and keyboard focus on
+  scrollable regions. axe-core now reports zero violations of any impact.
+- Chart: zero-cost days no longer draw a 2 px line; only their labels remain.
+
 ## Verification limits
 
 This environment initially had no `python3`, no `podman`, and no browser

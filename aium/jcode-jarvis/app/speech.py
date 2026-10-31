@@ -109,6 +109,7 @@ class Speech:
 
     def transcribe(self, pcm: bytes, lang: str = "auto") -> tuple[str, str]:
         wav = pcm_to_wav(pcm)
+        # Prefer the warm server; the CLI is the cold fallback.
         try:
             return self._server_stt(wav, lang)
         except Exception as exc:
@@ -116,6 +117,7 @@ class Speech:
         return self._cli_stt(wav, lang)
 
     def _server_stt(self, wav: bytes, lang: str) -> tuple[str, str]:
+        # curl keeps multipart upload and timeouts in one place.
         with tempfile.NamedTemporaryFile(suffix=".wav") as handle:
             handle.write(wav)
             handle.flush()

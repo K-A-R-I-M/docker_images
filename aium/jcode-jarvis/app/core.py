@@ -104,6 +104,7 @@ class Core:
         }
 
     def apply_settings(self) -> None:
+        # Sanitize the name so it cannot escape the voices directory.
         for code in ("en", "fr"):
             self.voice_names[code] = self.default_voice_names[code]
             self.voice_paths[code] = self.default_voice_paths[code]
@@ -129,6 +130,7 @@ class Core:
 
     def machine_usage(self) -> dict | None:
         now = time.time()
+        # Cache for five minutes; spawning jcode usage is slow.
         if now - self.usage_cache[0] < 300 and self.usage_cache[1] is not None:
             return self.usage_cache[1]
         try:
@@ -155,13 +157,16 @@ class Core:
             return None
 
     def turn(self, text: str | None = None, pcm: bytes | None = None, lang: str = "auto", emit=None) -> dict:
+        # One turn at a time; a concurrent request gets 409.
         if not self.turn_lock.acquire(blocking=False):
             raise BusyError("a turn is already running")
         success = False
         try:
+            # Cancellation is cooperative: the brain loop polls this event.
             self.cancel_event.clear()
             lang = (lang or "auto").strip().lower()
             if lang == "auto":
+                # "auto" defers to the saved language, then detection.
                 configured = self.settings.get("lang", "auto")
                 if configured in ("en", "fr"):
                     lang = configured

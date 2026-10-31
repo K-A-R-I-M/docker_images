@@ -521,6 +521,7 @@
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
+  // VAD: RMS gate, ~0.8 s of silence, ~15 s max utterance.
   const THRESHOLD = 0.025;
   const SILENCE_FRAMES = 6;
   const MIN_FRAMES = 3;
@@ -558,6 +559,7 @@
     deviceId: localStorage.getItem("jarvis_device") || "",
     lastMicError: "",
     tab: "brain",
+    // Forms load once so unsaved edits survive tab switches.
     settingsLoaded: false,
     brainLoaded: false,
   };
@@ -709,6 +711,7 @@
 
   let mermaidPromise = null;
 
+  // The 2.7 MB renderer loads only when a reply actually contains a diagram.
   function loadMermaid() {
     if (window.mermaid) return Promise.resolve(window.mermaid);
     if (!mermaidPromise) {
@@ -784,6 +787,7 @@
       box.appendChild(empty);
       return;
     }
+    // Server caps history at 50; render oldest to newest.
     state.turns.forEach((turn) => box.appendChild(messageEl(turn.role, turn.text)));
     if (state.liveUser) box.appendChild(messageEl("user", state.liveUser));
     if (state.liveReply) box.appendChild(messageEl("assistant", state.liveReply, true));
@@ -1216,6 +1220,7 @@
         $("stateChip").dataset.state = state.ui;
       }
       if (!data.brain) return;
+      // System rows are only visible on that tab; skip the rebuild otherwise.
       if (state.tab !== "system") return;
       const rows = [
         ["State", data.state],
@@ -1538,6 +1543,7 @@
   /* ---------- tabs ---------- */
 
   function activateTab(name) {
+    // Data tabs refresh on open; form tabs keep their current state.
     state.tab = name;
     if (history.replaceState) history.replaceState(null, "", "#" + name);
     document.querySelectorAll(".tab").forEach((tab) => {
@@ -1718,6 +1724,7 @@
   });
 
   function poll() {
+    // One poll drives the top bar, health, and live feed.
     if (document.hidden) return;
     refreshStatus();
     refreshHealth();

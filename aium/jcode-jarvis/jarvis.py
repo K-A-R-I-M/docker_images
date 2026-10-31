@@ -22,6 +22,7 @@ def main() -> int:
     args = parser.parse_args()
 
     core = Core(args)
+    # Speech children are stopped in the finally block below.
     supervisor = Supervisor(core, enabled=not args.no_supervise)
     supervisor.start()
     try:

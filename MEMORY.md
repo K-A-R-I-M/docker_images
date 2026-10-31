@@ -57,6 +57,7 @@ Updated: 2026-10-31 20:15
 - 2026-10-31 21:40 - Refactored jarvis.py (1946 lines) into app/ modules with a
   39-line entrypoint; converted tests to pytest and removed --selftest.
   Fixed a missing health-check import found by the probes.
-- 2026-10-31 21:50 - Cleanup: removed dead helpers/attrs, deduped icons,
-  lazy-loaded mermaid, and skipped hidden-tab renders. 19 tests and all probes
-  green.
+- 2026-10-31 21:50 - Cleanup: removed dead code, deduped icons, lazy-loaded
+  mermaid, and skipped hidden-tab renders. 19 tests and all probes green.
+- 2026-10-31 21:55 - Commented the non-obvious invariants (locks, fallbacks,
+  atomic writes, audio chunking, lazy load). Behavior unchanged; probes green.

@@ -66,6 +66,7 @@ class Store:
                 );
                 """
             )
+            # FTS5 is optional; fall back to LIKE on builds without it.
             try:
                 self.conn.execute(
                     "CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(text, tags, content='facts', content_rowid='id')"
@@ -99,6 +100,7 @@ class Store:
 
     def new_session(self) -> str:
         session_id = "s_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Only one session is open; opening a new one closes the previous.
         with self.lock, self.conn:
             self.conn.execute("UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL", (now_iso(),))
             self.conn.execute(
@@ -213,6 +215,7 @@ class Store:
     ) -> None:
         usage = usage or {}
         with self.lock, self.conn:
+            # Copy totals onto the session row so cost reads stay one query.
             self.conn.execute(
                 """
                 INSERT INTO turns (
@@ -313,6 +316,7 @@ class Store:
                     "ORDER BY id DESC LIMIT ?",
                     (self.session_id, limit),
                 ).fetchall()
+        # Newest last, so the panel appends without reversing.
         return [self._turn_dict(row) for row in reversed(rows)]
 
     def all_turns(self) -> list[dict]:
@@ -333,6 +337,7 @@ class Store:
         days = self._clamp_int(days, 7, 1, 90)
         today = date.today()
         start = today - timedelta(days=days - 1)
+        # Bucket by the host's local date; stored timestamps keep their offset.
         with self.lock:
             rows = self.conn.execute(
                 "SELECT date(ts, 'localtime') AS day, COALESCE(SUM(cost_usd), 0) AS cost, "

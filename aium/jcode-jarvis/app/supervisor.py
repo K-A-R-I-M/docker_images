@@ -101,6 +101,7 @@ class Supervisor:
                     self.failures.pop(name, None)
                     continue
                 self.core.store.event("warn", "supervisor", f"{name} exited {proc.returncode}")
+                # Count fast crashes so a broken binary is abandoned instead of looped.
                 if time.time() - self.started.get(name, 0) > 10:
                     self.failures[name] = 1
                 else:

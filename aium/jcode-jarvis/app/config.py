@@ -8,6 +8,7 @@ import tomllib
 from datetime import datetime
 from pathlib import Path
 
+# index.html and vendor/ sit one level above this package.
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = "2.0"
 DEFAULT_BRAIN = {
@@ -41,6 +42,7 @@ def load_brain(path: Path) -> dict:
         pass
     except Exception:
         pass
+    # Container env overrides the volume config without rewriting the file.
     config["provider"] = os.environ.get("JARVIS_BRAIN_PROVIDER", config.get("provider", ""))
     config["model"] = os.environ.get("JARVIS_BRAIN_MODEL", config.get("model", ""))
     config["provider"] = str(config.get("provider") or "").strip()
@@ -66,6 +68,7 @@ def save_brain(path: Path, config: dict) -> None:
         f"fallback = [{fallback}]\n"
         f'timeout_ms = {int(config.get("timeout_ms", 30000))}\n'
     )
+    # Atomic replace so a crash cannot leave a half-written brain.toml.
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(text, encoding="utf-8")

@@ -15,6 +15,7 @@ from app.core import BusyError, Core
 from app.speech import SpeechError
 from app.supervisor import run_lines
 
+# Cap request bodies so a runaway upload cannot exhaust memory.
 MAX_BODY = 16 * 1024 * 1024
 
 class BodyTooLarge(Exception):
@@ -46,6 +47,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
+        # The UI and the local renderer are public; /api routes are not.
         if path in ("/", "/index.html"):
             try:
                 body = (ROOT / "index.html").read_bytes()
@@ -284,6 +286,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(200, result)
             return
 
+        # A stream has already started, so failures become SSE error events.
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
         self.send_header("Cache-Control", "no-cache")

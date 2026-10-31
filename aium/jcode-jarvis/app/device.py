@@ -20,6 +20,7 @@ def device_loop(core: Core, lang: str) -> None:
         ["arecord", "-q", "-f", "S16_LE", "-r", "16000", "-c", "1", "-t", "raw"],
         stdout=subprocess.PIPE,
     )
+    # 3200 bytes is 100 ms of 16 kHz mono PCM; 8 silent chunks end an utterance.
     chunk = 3200
     speaking = False
     silence = 0

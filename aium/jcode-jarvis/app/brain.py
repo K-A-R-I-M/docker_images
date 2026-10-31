@@ -74,6 +74,7 @@ class Brain:
     def complete(self, text: str, lang: str, on_delta=None, on_sentence=None) -> BrainResult:
         prompt = self.build_prompt(text, lang)
         errors = []
+        # Only fall back before the first token; a partial reply must not be retried.
         for provider, model in self.candidates():
             emitted = {"value": False}
 

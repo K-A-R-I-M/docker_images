@@ -22,7 +22,7 @@ def compute_cost(pricing: dict, provider: str, model: str, usage: dict | None) -
             + cache_read * float(rates.get("cache_read", 0))
             + cache_write * float(rates.get("cache_write", 0))
             + output_tokens * float(rates.get("output", 0))
-        ) / 1_000_000
+        ) / 1_000_000  # rates are USD per million tokens
         return round(cost, 8)
     except Exception:
         return None

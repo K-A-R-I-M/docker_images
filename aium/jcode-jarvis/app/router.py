@@ -19,6 +19,7 @@ class Router:
     """Small local intents. Everything else goes to the brain."""
 
     def route(self, text: str, lang: str, store: Store) -> Route:
+        # Order matters: stop and goodbye must win over greetings and memory verbs.
         raw = text.strip()
         low = raw.lower()
 

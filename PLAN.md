@@ -326,9 +326,25 @@ probes report 0 failures, and the Impeccable detector stays clean. The browser
 probe now also proves that no mermaid request happens without a diagram and
 that the renderer loads on demand when one appears.
 
-Not done, deliberately: FastAPI/uvicorn/Pydantic/httpx, ORM, async handlers, UI
-split. Those are a separate phase with their own dependency and latency review.
-Image rebuild still pending.
+Not done, deliberately: FastAPI/uvicorn/Pydantic/httpx, ORM, async handlers.
+Those are a separate phase with their own dependency and latency review. Image
+rebuild still pending.
+
+## Frontend split (2026-10-31 22:00)
+
+index.html is now markup only: 194 lines. styles.css holds the 327 lines of CSS,
+and app.js holds the 1,234 lines of panel logic. Total frontend code is
+unchanged; the single file is gone.
+
+- The server serves both files from a small public whitelist in app/api.py, with
+  the same no-store headers as the page.
+- The Dockerfile copies styles.css and app.js; the README lists them.
+- No build step and no framework. The module split inside app.js is still a
+  future option.
+- Verification: 19 pytest tests, all 5 backend probes, and all 6 browser probes
+  report 0 failures. The backend probe now also checks that styles.css and
+  app.js are served with the right content types.
+
 
 ## Verification limits
 

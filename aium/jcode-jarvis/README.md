@@ -195,7 +195,9 @@ app/                package: config, store, router, speech, brain, core,
 tests/              pytest suite
 pyproject.toml      pytest settings
 requirements-dev.txt test dependency
-index.html          control panel UI (transcript, live events, six tabs)
+index.html          panel markup
+styles.css          panel styles
+app.js              panel logic: API, audio, transcript, tabs
 vendor/             vendored mermaid build for local diagram rendering
 AGENTS.md           companion persona (also installed as /root/AGENTS.md)
 config.toml         minimal jcode provider config

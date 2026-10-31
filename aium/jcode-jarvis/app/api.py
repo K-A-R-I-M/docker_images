@@ -18,6 +18,13 @@ from app.supervisor import run_lines
 # Cap request bodies so a runaway upload cannot exhaust memory.
 MAX_BODY = 16 * 1024 * 1024
 
+# Public assets; everything under /api still needs the token when set.
+STATIC_FILES = {
+    "/styles.css": ("styles.css", "text/css; charset=utf-8"),
+    "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/vendor/mermaid.min.js": ("vendor/mermaid.min.js", "text/javascript; charset=utf-8"),
+}
+
 class BodyTooLarge(Exception):
     pass
 
@@ -56,13 +63,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._send_bytes(200, body, "text/html; charset=utf-8")
             return
-        if path == "/vendor/mermaid.min.js":
+        static = STATIC_FILES.get(path)
+        if static:
+            name, content_type = static
             try:
-                body = (ROOT / "vendor" / "mermaid.min.js").read_bytes()
+                body = (ROOT / name).read_bytes()
             except OSError:
                 self._send_json(404, {"error": "not found"})
                 return
-            self._send_bytes(200, body, "text/javascript; charset=utf-8")
+            self._send_bytes(200, body, content_type)
             return
         if not self._auth_ok():
             return

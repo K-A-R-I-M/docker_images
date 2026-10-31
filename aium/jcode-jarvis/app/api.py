@@ -10,7 +10,7 @@ import sys
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from app.config import ROOT, VERSION, save_brain
+from app.config import VERSION, WEB, save_brain
 from app.core import BusyError, Core
 from app.speech import SpeechError
 from app.supervisor import run_lines
@@ -61,7 +61,7 @@ class Handler(BaseHTTPRequestHandler):
         # The UI and the local renderer are public; /api routes are not.
         if path in ("/", "/index.html"):
             try:
-                body = (ROOT / "index.html").read_bytes()
+                body = (WEB / "index.html").read_bytes()
             except OSError:
                 self._send_json(500, {"error": "index.html missing"})
                 return
@@ -73,7 +73,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(404, {"error": "not found"})
                 return
             try:
-                body = (ROOT / "js" / name).read_bytes()
+                body = (WEB / "js" / name).read_bytes()
             except OSError:
                 self._send_json(404, {"error": "not found"})
                 return
@@ -83,7 +83,7 @@ class Handler(BaseHTTPRequestHandler):
         if static:
             name, content_type = static
             try:
-                body = (ROOT / name).read_bytes()
+                body = (WEB / name).read_bytes()
             except OSError:
                 self._send_json(404, {"error": "not found"})
                 return

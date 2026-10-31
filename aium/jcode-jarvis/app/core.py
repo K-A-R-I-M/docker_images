@@ -27,11 +27,12 @@ class Core:
     def __init__(self, args: argparse.Namespace):
         self.data_dir = Path(args.data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.persona_dir = Path(os.environ.get("JARVIS_PERSONA_DIR", str(ROOT)))
+        # jcode reads AGENTS.md from its working directory, so run it in persona/.
+        self.persona_dir = Path(os.environ.get("JARVIS_PERSONA_DIR", str(ROOT / "persona")))
         self.brain_path = self.data_dir / "brain.toml"
-        seed_brain = self.brain_path if self.brain_path.exists() else ROOT / "brain.toml"
+        seed_brain = self.brain_path if self.brain_path.exists() else ROOT / "config" / "brain.toml"
         self.brain_config = load_brain(seed_brain)
-        self.pricing = load_json(ROOT / "pricing.json", {})
+        self.pricing = load_json(ROOT / "config" / "pricing.json", {})
         self.store = Store(self.data_dir / "jarvis.db")
         self.settings = Settings(self.data_dir / "settings.json")
         self.router = Router()

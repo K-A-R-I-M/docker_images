@@ -56,7 +56,7 @@ is saved in System.
 
 Diagrams: when the user explicitly asks for a schema or a diagram, Jarvis may
 reply with one fenced mermaid block. The transcript renders it locally with the
-vendored `vendor/mermaid.min.js`, fetched only when a diagram appears; nothing
+vendored `web/vendor/mermaid.min.js`, fetched only when a diagram appears; nothing
 is fetched from the internet, and the block is never spoken. All other replies
 stay plain text.
 
@@ -79,7 +79,7 @@ Windows and macOS, use browser mode; Podman there does not pass host audio.
 ## Brain
 
 The brain is a provider/model pair, not a fixed DeepSeek call. The image ships
-`brain.toml` with DeepSeek as the default. The Info drawer lists providers and
+`config/brain.toml` with DeepSeek as the default. The Brain tab lists providers and
 models from jcode, and can Apply or Test a switch. The same values can be set by
 environment:
 
@@ -122,13 +122,13 @@ run commands.
 
 ## Cost
 
-The Info drawer shows:
+The Cost tab shows:
 
-- last turn and session cost, computed from tokens and `pricing.json`;
+- last turn and session cost, computed from tokens and `config/pricing.json`;
 - today, month, all-time local spend and provider balance from
   `jcode usage --json`.
 
-Edit `pricing.json` inside the image or bake your own rates. Unknown models show
+Edit `config/pricing.json` inside the image or bake your own rates. Unknown models show
 tokens without a dollar amount. Local speech is free.
 
 ## Profiles and tuning
@@ -188,28 +188,28 @@ Whisper, or network.
 ## Files
 
 ```
-Dockerfile          multi-arch image build
-jarvis.py           entrypoint: args, core, supervisor, server
-app/                package: config, store, router, speech, brain, core,
-                    supervisor, api, device, cost, language
-tests/              pytest suite
-pyproject.toml      pytest settings
+Dockerfile           multi-arch image build
+jarvis.py            entrypoint: args, core, supervisor, server
+app/                 Python package; app/__init__.py lists every module by role
+web/                 browser client
+web/index.html       panel markup
+web/styles.css       panel styles
+web/js/app.js        entry module: tabs, wiring, polling
+web/js/core.js       shared state, DOM helpers, formatting, API client
+web/js/ui.js         status chip, banner, stage timer
+web/js/audio.js      microphone, VAD, playback, speech fallback
+web/js/transcript.js messages, rich text, breakdown
+web/js/diagrams.js   lazy mermaid renderer
+web/js/turn.js       SSE turn and cancellation
+web/js/panels-system.js status, health, events, logs, history
+web/js/panels-config.js brain, voice, memory, cost, microphones
+web/vendor/          vendored mermaid build for local diagram rendering
+persona/AGENTS.md    companion persona (also installed as /root/AGENTS.md)
+config/config.toml   minimal jcode provider config
+config/brain.toml    default provider/model/fallback
+config/pricing.json  editable per-model rates
+tests/               pytest suite
+pyproject.toml       pytest settings
 requirements-dev.txt test dependency
-index.html          panel markup
-styles.css          panel styles
-js/app.js           entry module: tabs, wiring, polling
-js/core.js          shared state, DOM helpers, formatting, API client
-js/ui.js            status chip, banner, stage timer
-js/audio.js         microphone, VAD, playback, speech fallback
-js/transcript.js    messages, rich text, breakdown
-js/diagrams.js      lazy mermaid renderer
-js/turn.js          SSE turn and cancellation
-js/panels-system.js status, health, events, logs, history
-js/panels-config.js brain, voice, memory, cost, microphones
-vendor/             vendored mermaid build for local diagram rendering
-AGENTS.md           companion persona (also installed as /root/AGENTS.md)
-config.toml         minimal jcode provider config
-brain.toml          default provider/model/fallback
-pricing.json        editable per-model rates
-NOTICE              bundled licenses
+NOTICE               bundled licenses
 ```

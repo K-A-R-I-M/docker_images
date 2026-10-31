@@ -102,14 +102,15 @@ RUN set -eux; \
 COPY --from=piper-builder /opt/piper /opt/piper
 
 WORKDIR /opt/jarvis
-COPY jarvis.py index.html styles.css AGENTS.md config.toml brain.toml pricing.json NOTICE ./
+COPY jarvis.py NOTICE ./
 COPY app ./app
-COPY js ./js
-COPY vendor ./vendor
+COPY web ./web
+COPY persona ./persona
+COPY config ./config
 
 RUN mkdir -p /root/.jcode /data \
-    && cp /opt/jarvis/AGENTS.md /root/AGENTS.md \
-    && cp /opt/jarvis/config.toml /root/.jcode/config.toml \
+    && cp /opt/jarvis/persona/AGENTS.md /root/AGENTS.md \
+    && cp /opt/jarvis/config/config.toml /root/.jcode/config.toml \
     && chmod 700 /data
 
 VOLUME ["/data"]

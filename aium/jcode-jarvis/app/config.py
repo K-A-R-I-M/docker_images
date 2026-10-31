@@ -8,8 +8,9 @@ import tomllib
 from datetime import datetime
 from pathlib import Path
 
-# index.html and vendor/ sit one level above this package.
+# The Python package sits beside web/ and the runtime config files.
 ROOT = Path(__file__).resolve().parent.parent
+WEB = ROOT / "web"
 VERSION = "2.0"
 DEFAULT_BRAIN = {
     "backend": "jcode",

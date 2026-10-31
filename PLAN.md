@@ -330,20 +330,35 @@ Not done, deliberately: FastAPI/uvicorn/Pydantic/httpx, ORM, async handlers.
 Those are a separate phase with their own dependency and latency review. Image
 rebuild still pending.
 
-## Frontend split (2026-10-31 22:00)
+## Frontend split (2026-10-31 22:17)
 
-index.html is now markup only: 194 lines. styles.css holds the 327 lines of CSS,
-and app.js holds the 1,234 lines of panel logic. Total frontend code is
-unchanged; the single file is gone.
+index.html is markup only: 194 lines. styles.css holds 327 lines. The panel
+logic is now nine native ES modules under js/, 1,331 lines total:
 
-- The server serves both files from a small public whitelist in app/api.py, with
-  the same no-store headers as the page.
-- The Dockerfile copies styles.css and app.js; the README lists them.
-- No build step and no framework. The module split inside app.js is still a
-  future option.
-- Verification: 19 pytest tests, all 5 backend probes, and all 6 browser probes
-  report 0 failures. The backend probe now also checks that styles.css and
-  app.js are served with the right content types.
+- app.js 225: tabs, wiring, polling, boot.
+- audio.js 279: mic, VAD, playback, fallback.
+- core.js 136: state, DOM helpers, formatting, fetch, download.
+- panels-config.js 224: brain, voice, memory, cost, microphones.
+- panels-system.js 125: status, health, events, logs, history.
+- turn.js 112: SSE turn and cancellation.
+- transcript.js 107: messages, rich text, breakdown.
+- diagrams.js 65: lazy mermaid.
+- ui.js 58: state chip, banner, stage timer.
+
+Dependency direction is one way: core, ui, and diagrams are leaves; audio and
+transcript sit above core; turn sits above audio, transcript, and panels;
+panels sit above core and transcript; app wires everything. Two cycles are
+avoided deliberately: app injects sendTurn into audio through initAudio, and
+core gets the banner function through setNotifier, so core never imports ui.
+
+The server serves `/js/<name>.js` from a guarded filename whitelist. The
+Dockerfile copies js/; the README lists the modules. Every module has a header
+and comments on its exports and non-obvious logic.
+
+Verification: 19 pytest tests, all 5 backend probes, and all 6 browser probes
+report 0 failures, and the Impeccable detector stays clean. Total frontend code
+is unchanged; only its layout changed.
+
 
 
 ## Verification limits

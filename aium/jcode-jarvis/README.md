@@ -197,7 +197,15 @@ pyproject.toml      pytest settings
 requirements-dev.txt test dependency
 index.html          panel markup
 styles.css          panel styles
-app.js              panel logic: API, audio, transcript, tabs
+js/app.js           entry module: tabs, wiring, polling
+js/core.js          shared state, DOM helpers, formatting, API client
+js/ui.js            status chip, banner, stage timer
+js/audio.js         microphone, VAD, playback, speech fallback
+js/transcript.js    messages, rich text, breakdown
+js/diagrams.js      lazy mermaid renderer
+js/turn.js          SSE turn and cancellation
+js/panels-system.js status, health, events, logs, history
+js/panels-config.js brain, voice, memory, cost, microphones
 vendor/             vendored mermaid build for local diagram rendering
 AGENTS.md           companion persona (also installed as /root/AGENTS.md)
 config.toml         minimal jcode provider config

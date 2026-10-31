@@ -8,8 +8,8 @@ Updated: 2026-10-31 20:15
 - Working on: `aium/jcode-jarvis` cleanup and optimization
 - Built: `jarvis.py` is a 39-line entrypoint; `app/` has config, cost,
   language, store, router, speech, brain, core, supervisor, api, device.
-  Frontend is split: index.html 194 lines, styles.css 327, app.js 1234.
-  Tests are pytest, selftest removed.
+  Frontend: index.html 194, styles.css 327, and nine ES modules under js/
+  (largest 279). Tests are pytest, selftest removed.
 - Cleaned: dropped dead helpers/attributes/unused imports, deduped icons,
   lazy-loads mermaid (2.7 MB only when a diagram appears), skips hidden-tab
   re-renders.
@@ -64,3 +64,6 @@ Updated: 2026-10-31 20:15
   atomic writes, audio chunking, lazy load). Behavior unchanged; probes green.
 - 2026-10-31 22:00 - Split index.html into index.html (194), styles.css (327),
   app.js (1234); server serves them from a public whitelist. All probes green.
+- 2026-10-31 22:17 - Split app.js into nine ES modules under js/ (largest 279),
+  documented each module; server serves /js with a filename guard. All probes
+  green.

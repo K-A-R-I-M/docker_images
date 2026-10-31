@@ -21,7 +21,6 @@ MAX_BODY = 16 * 1024 * 1024
 # Public assets; everything under /api still needs the token when set.
 STATIC_FILES = {
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
-    "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/vendor/mermaid.min.js": ("vendor/mermaid.min.js", "text/javascript; charset=utf-8"),
 }
 
@@ -62,6 +61,18 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(500, {"error": "index.html missing"})
                 return
             self._send_bytes(200, body, "text/html; charset=utf-8")
+            return
+        if path.startswith("/js/"):
+            name = path[4:]
+            if re.fullmatch(r"[a-z0-9-]+\.js", name) is None:
+                self._send_json(404, {"error": "not found"})
+                return
+            try:
+                body = (ROOT / "js" / name).read_bytes()
+            except OSError:
+                self._send_json(404, {"error": "not found"})
+                return
+            self._send_bytes(200, body, "text/javascript; charset=utf-8")
             return
         static = STATIC_FILES.get(path)
         if static:

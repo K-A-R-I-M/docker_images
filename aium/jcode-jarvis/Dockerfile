@@ -102,8 +102,9 @@ RUN set -eux; \
 COPY --from=piper-builder /opt/piper /opt/piper
 
 WORKDIR /opt/jarvis
-COPY jarvis.py index.html styles.css app.js AGENTS.md config.toml brain.toml pricing.json NOTICE ./
+COPY jarvis.py index.html styles.css AGENTS.md config.toml brain.toml pricing.json NOTICE ./
 COPY app ./app
+COPY js ./js
 COPY vendor ./vendor
 
 RUN mkdir -p /root/.jcode /data \

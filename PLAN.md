@@ -296,13 +296,24 @@ After:
 
 - `jarvis.py` is 39 lines: args, Core, Supervisor, serve or device loop.
 - `app/` holds one concern per module: `config` 131, `cost` 30, `language` 38,
-  `store` 414, `router` 85, `speech` 216, `brain` 213, `core` 265,
-  `supervisor` 134, `api` 409, `device` 64.
-- Largest file dropped from 1946 to 414 lines; the entrypoint is wiring only.
-- Tests moved to pytest: 20 functions in `tests/test_jarvis.py`, `pyproject.toml`
+  `store` 392, `router` 85, `speech` 202, `brain` 210, `core` 263,
+  `supervisor` 137, `api` 409, `device` 64.
+- Largest file dropped from 1946 to 409 lines; the entrypoint is wiring only.
+- Tests moved to pytest: 19 functions in `tests/test_jarvis.py`, `pyproject.toml`
   sets `testpaths` and `pythonpath`, `requirements-dev.txt` pins pytest. The
   `--selftest` flag and its duplicate 45-line routine are gone.
 - `Dockerfile` copies `app/`; README describes the new layout and test command.
+
+Cleanup after the split, with no behavior change:
+
+- Removed dead code: `Store.per_turn_costs`, `split_sentences`,
+  `BrainResult.session_id`, unused `Core.args` and `Core.voices`, and an unused
+  `urllib.error` import.
+- Collapsed three identical microphone icon strings into one constant.
+- Mermaid is now lazy: the 2.7 MB renderer is fetched only when a completed
+  reply actually contains a diagram. A normal page load downloads no mermaid.
+- `refreshStatus` no longer rebuilds the System rows every 5 s unless that tab
+  is open, and the Logs list renders only while Logs is open.
 
 No behavior changes were intended. The full contract probes were rerun
 unchanged. They found one real regression: the extracted supervisor module
@@ -310,8 +321,10 @@ lacked the `socket` and `urllib` imports used by the health checks, so whisper
 and Piper always read as off. Imports restored, plus a `test_health_checks`
 regression test.
 
-Verification: 20 pytest tests pass, all 5 backend probes and all 6 browser
-probes report 0 failures, and the Impeccable detector stays clean.
+Verification: 19 pytest tests pass, all 5 backend probes and all 6 browser
+probes report 0 failures, and the Impeccable detector stays clean. The browser
+probe now also proves that no mermaid request happens without a diagram and
+that the renderer loads on demand when one appears.
 
 Not done, deliberately: FastAPI/uvicorn/Pydantic/httpx, ORM, async handlers, UI
 split. Those are a separate phase with their own dependency and latency review.

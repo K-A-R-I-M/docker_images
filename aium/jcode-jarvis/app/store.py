@@ -351,28 +351,6 @@ class Store:
             out.append({"date": day, "cost_usd": round(cost, 8), "turns": turns})
         return out
 
-    def per_turn_costs(self, limit: int = 20) -> list[dict]:
-        limit = self._clamp_int(limit, 20, 1, 100)
-        with self.lock:
-            rows = self.conn.execute(
-                "SELECT ts, role, cost_usd, total_ms, input_tokens, output_tokens, provider, model "
-                "FROM turns WHERE session_id = ? ORDER BY id DESC LIMIT ?",
-                (self.session_id, limit),
-            ).fetchall()
-        return [
-            {
-                "ts": str(row["ts"]),
-                "role": str(row["role"]),
-                "cost_usd": float(row["cost_usd"] or 0),
-                "total_ms": int(row["total_ms"] or 0),
-                "input_tokens": int(row["input_tokens"] or 0),
-                "output_tokens": int(row["output_tokens"] or 0),
-                "provider": row["provider"] or "",
-                "model": row["model"] or "",
-            }
-            for row in rows
-        ]
-
     def spend_today(self) -> float:
         with self.lock:
             row = self.conn.execute(

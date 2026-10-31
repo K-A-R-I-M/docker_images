@@ -517,7 +517,6 @@
   </main>
 </div>
 
-<script src="/vendor/mermaid.min.js"></script>
 <script>
 (() => {
   "use strict";
@@ -528,23 +527,11 @@
   const MAX_FRAMES = 120;
   const RING = 2 * Math.PI * 54;
 
-  if (window.mermaid) {
-    try {
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: "strict",
-        theme: window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "neutral",
-      });
-    } catch (_) {}
-  }
-
   const state = {
     enabled: false,
     ui: "idle",
     lang: "auto",
     settings: null,
-    status: null,
-    health: null,
     events: [],
     turns: [],
     liveUser: "",
@@ -571,15 +558,12 @@
     deviceId: localStorage.getItem("jarvis_device") || "",
     lastMicError: "",
     tab: "brain",
-    pollTimer: null,
     settingsLoaded: false,
     brainLoaded: false,
   };
 
+  const MIC_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>';
   const icons = {
-    idle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>',
-    listening: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>',
-    thinking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M9 21h6"/></svg>',
     speaking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M19 6a9 9 0 0 1 0 12"/></svg>',
   };
 
@@ -590,7 +574,7 @@
     $("stateChip").textContent = text;
     $("stateChip").dataset.state = ui;
     $("orb").setAttribute("aria-label", ui === "idle" ? "Start session" : "End session");
-    $("orb").innerHTML = icons[ui] || icons.idle;
+    $("orb").innerHTML = icons[ui] || MIC_ICON;
     $("sessionBtn").textContent = state.enabled ? "Stop" : "Start";
     $("sessionBtn").setAttribute("aria-label", state.enabled ? "Stop session" : "Start session");
     $("cancelBtn").hidden = ui !== "thinking";
@@ -723,14 +707,43 @@
     if (rest || last === 0) container.appendChild(textSegment(rest));
   }
 
+  let mermaidPromise = null;
+
+  function loadMermaid() {
+    if (window.mermaid) return Promise.resolve(window.mermaid);
+    if (!mermaidPromise) {
+      mermaidPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "/vendor/mermaid.min.js";
+        script.onload = () => {
+          try {
+            window.mermaid.initialize({
+              startOnLoad: false,
+              securityLevel: "strict",
+              theme: window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "neutral",
+            });
+            resolve(window.mermaid);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        script.onerror = () => reject(new Error("mermaid failed to load"));
+        document.head.appendChild(script);
+      });
+    }
+    return mermaidPromise;
+  }
+
   function renderDiagrams(root) {
-    if (!window.mermaid) return;
-    root.querySelectorAll(".mermaid[data-code]").forEach((node) => {
-      const code = node.dataset.code;
-      delete node.dataset.code;
-      const id = "mmd" + Math.random().toString(36).slice(2);
-      try {
-        Promise.resolve(mermaid.render(id, code)).then((result) => {
+    const nodes = root.querySelectorAll(".mermaid[data-code]");
+    if (!nodes.length) return;
+    loadMermaid().then((lib) => {
+      nodes.forEach((node) => {
+        const code = node.dataset.code;
+        if (!code) return;
+        delete node.dataset.code;
+        const id = "mmd" + Math.random().toString(36).slice(2);
+        Promise.resolve(lib.render(id, code)).then((result) => {
           node.innerHTML = result.svg;
           const svg = node.querySelector("svg");
           if (svg && svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width) {
@@ -745,10 +758,14 @@
           node.textContent = code;
           node.classList.add("failed");
         });
-      } catch (_) {
-        node.textContent = code;
+      });
+    }).catch(() => {
+      nodes.forEach((node) => {
+        if (!node.dataset.code) return;
+        node.textContent = node.dataset.code;
+        delete node.dataset.code;
         node.classList.add("failed");
-      }
+      });
     });
   }
 
@@ -1190,7 +1207,6 @@
   async function refreshStatus() {
     try {
       const data = await (await api("/api/status")).json();
-      state.status = data;
       $("topBrain").textContent = (data.brain?.provider || "—") + "/" + (data.brain?.model || "—");
       $("topBrain").title = $("topBrain").textContent;
       $("topSpend").textContent = money(data.spend_today ?? data.cost_usd);
@@ -1200,6 +1216,7 @@
         $("stateChip").dataset.state = state.ui;
       }
       if (!data.brain) return;
+      if (state.tab !== "system") return;
       const rows = [
         ["State", data.state],
         ["Session", data.session_id],
@@ -1237,7 +1254,6 @@
   async function refreshHealth() {
     try {
       const data = await (await api("/api/health")).json();
-      state.health = data;
       const items = [["whisper", "Whisper", "dotWhisper"], ["piper", "Piper", "dotPiper"], ["jcode", "jcode", "dotJcode"], ["db", "Database", "dotDb"]];
       $("healthRows").innerHTML = "";
       items.forEach(([key, label, dotId]) => {
@@ -1276,7 +1292,7 @@
         row.append(time, document.createTextNode(event.event + (event.detail ? " · " + event.detail : "")));
         feed.appendChild(row);
       });
-      renderLogs();
+      if (state.tab === "logs") renderLogs();
       $("logStatus").textContent = state.events.length + " events";
       if (!state.events.length) {
         const empty = document.createElement("p");
@@ -1727,7 +1743,7 @@
   refreshBrain();
   refreshMics();
   refreshMicDiag();
-  state.pollTimer = setInterval(poll, 5000);
+  setInterval(poll, 5000);
 })();
 </script>
 </body>

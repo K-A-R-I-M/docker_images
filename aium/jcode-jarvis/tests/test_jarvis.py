@@ -13,7 +13,7 @@ from app.core import Core
 from app.cost import compute_cost
 from app.language import detect_lang
 from app.router import Router
-from app.speech import SentenceBuffer, SpeechFence, pcm_to_wav, rms_s16, split_sentences
+from app.speech import SentenceBuffer, SpeechFence, pcm_to_wav, rms_s16
 from app.store import Store
 
 
@@ -24,7 +24,6 @@ def test_language():
 
 
 def test_sentences():
-    assert split_sentences("One. Two! Three?") == ["One.", "Two!", "Three?"]
     buffer = SentenceBuffer()
     assert buffer.feed("Hello there. How ") == ["Hello there."]
     assert buffer.feed("are you?") == ["How are you?"]
@@ -161,32 +160,6 @@ def test_cost_by_day(tmp_path):
     assert store.last_assistant_cost() == pytest.approx(0.25)
     assert len(store.cost_by_day(0)) == 1
     assert len(store.cost_by_day(500)) == 90
-    store.close()
-
-
-def test_per_turn_costs(tmp_path):
-    store = Store(tmp_path / "test.db")
-    store.add_turn("assistant", "first", "en", total_ms=100, cost=0.01,
-                   usage={"input_tokens": 1, "output_tokens": 2},
-                   provider="p", model="m")
-    store.add_turn("assistant", "second", "en", total_ms=200, cost=0.02,
-                   usage={"input_tokens": 3, "output_tokens": 4},
-                   provider="p", model="m")
-    costs = store.per_turn_costs(10)
-    assert len(costs) == 2
-    assert costs[0]["cost_usd"] == pytest.approx(0.02)
-    assert costs[1]["cost_usd"] == pytest.approx(0.01)
-    assert costs[0]["total_ms"] == 200
-    assert costs[0]["input_tokens"] == 3
-    assert costs[0]["output_tokens"] == 4
-    assert costs[0]["role"] == "assistant"
-    for key in (
-        "ts", "role", "cost_usd", "total_ms", "input_tokens",
-        "output_tokens", "provider", "model",
-    ):
-        assert key in costs[0]
-    assert len(store.per_turn_costs(0)) == 1
-    assert len(store.per_turn_costs(500)) <= 100
     store.close()
 
 

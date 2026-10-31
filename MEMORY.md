@@ -5,13 +5,15 @@ Updated: 2026-10-31 20:15
 ## Current state
 
 - Plan: PLAN.md (v2 built and refactored; hardware verification pending)
-- Working on: `aium/jcode-jarvis` module refactor
+- Working on: `aium/jcode-jarvis` cleanup and optimization
 - Built: `jarvis.py` is a 39-line entrypoint; `app/` has config, cost,
   language, store, router, speech, brain, core, supervisor, api, device.
-  Largest module 414 lines. Tests are pytest, selftest removed.
-- Verified: 20 pytest tests pass; all 5 backend probes and all 6 browser probes
-  report 0 failures; detector clean. Refactor regression found and fixed:
-  supervisor health checks were missing socket/urllib imports.
+  Largest module 409 lines. Tests are pytest, selftest removed.
+- Cleaned: dropped dead helpers/attributes/unused imports, deduped icons,
+  lazy-loads mermaid (2.7 MB only when a diagram appears), skips hidden-tab
+  re-renders.
+- Verified: 19 pytest tests pass; all 5 backend probes and all 6 browser probes
+  report 0 failures; detector clean; no mermaid fetch without a diagram.
 - Blocked: image rebuild needs podman; real mic and Piper audio need hardware.
 
 ## Next step
@@ -55,3 +57,6 @@ Updated: 2026-10-31 20:15
 - 2026-10-31 21:40 - Refactored jarvis.py (1946 lines) into app/ modules with a
   39-line entrypoint; converted tests to pytest and removed --selftest.
   Fixed a missing health-check import found by the probes.
+- 2026-10-31 21:50 - Cleanup: removed dead helpers/attrs, deduped icons,
+  lazy-loaded mermaid, and skipped hidden-tab renders. 19 tests and all probes
+  green.

@@ -19,14 +19,13 @@ class BrainError(RuntimeError):
 
 
 class BrainResult:
-    def __init__(self, text: str, provider: str, model: str, usage: dict, cost: float | None, ttft_ms: int, session_id: str = ""):
+    def __init__(self, text: str, provider: str, model: str, usage: dict, cost: float | None, ttft_ms: int):
         self.text = text
         self.provider = provider
         self.model = model
         self.usage = usage
         self.cost = cost
         self.ttft_ms = ttft_ms
-        self.session_id = session_id
 
 
 class Brain:
@@ -141,7 +140,6 @@ class Brain:
         timer.start()
         parts: list[str] = []
         usage: dict = {}
-        session_id = ""
         used_provider = provider
         used_model = model
         buffer = SentenceBuffer()
@@ -160,7 +158,6 @@ class Brain:
                     continue
                 kind = event.get("type")
                 if kind == "start":
-                    session_id = event.get("session_id", "")
                     used_provider = event.get("provider", provider)
                     used_model = event.get("model", model)
                 elif kind == "text_delta":
@@ -208,6 +205,6 @@ class Brain:
                 pass
             raise BrainError(("timeout" if killed["value"] else "empty reply") + (": " + stderr if stderr else ""))
         cost = compute_cost(self.core.pricing, used_provider, used_model, usage)
-        return BrainResult(text, used_provider, used_model, usage, cost, ttft_ms, session_id)
+        return BrainResult(text, used_provider, used_model, usage, cost, ttft_ms)
 
 

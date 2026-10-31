@@ -22,7 +22,6 @@ from app.supervisor import check_http, check_port
 
 class Core:
     def __init__(self, args: argparse.Namespace):
-        self.args = args
         self.data_dir = Path(args.data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.persona_dir = Path(os.environ.get("JARVIS_PERSONA_DIR", str(ROOT)))
@@ -59,7 +58,6 @@ class Core:
         }
         self.voice_names = dict(self.default_voice_names)
         self.voice_paths = dict(self.default_voice_paths)
-        self.voices = self.voice_names
         self.apply_settings()
         self.started_at = now_iso()
         self.started_ts = time.time()

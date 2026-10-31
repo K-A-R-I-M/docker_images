@@ -56,8 +56,9 @@ is saved in System.
 
 Diagrams: when the user explicitly asks for a schema or a diagram, Jarvis may
 reply with one fenced mermaid block. The transcript renders it locally with the
-vendored `vendor/mermaid.min.js`; nothing is fetched from the internet, and the
-block is never spoken. All other replies stay plain text.
+vendored `vendor/mermaid.min.js`, fetched only when a diagram appears; nothing
+is fetched from the internet, and the block is never spoken. All other replies
+stay plain text.
 
 ## Run, device mode
 

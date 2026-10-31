@@ -9,7 +9,6 @@ import re
 import subprocess
 import sys
 import tempfile
-import urllib.error
 import urllib.request
 import wave
 from pathlib import Path
@@ -51,18 +50,6 @@ def detect_lang(text: str, forced: str = "auto") -> str:
     fr = sum(1 for w in words if w in FR_WORDS)
     en = sum(1 for w in words if w in EN_WORDS)
     return "fr" if fr > en else "en"
-
-
-_SENT_RE = re.compile(r"[^.!?…]+[.!?…]*")
-
-
-def split_sentences(text: str) -> list[str]:
-    parts = []
-    for match in _SENT_RE.finditer(text or ""):
-        sentence = match.group(0).strip()
-        if sentence:
-            parts.append(sentence)
-    return parts
 
 
 class SpeechFence:

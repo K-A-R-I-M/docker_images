@@ -84,6 +84,7 @@
   button.chip { cursor: pointer; transition: color 140ms ease, border-color 140ms ease; }
   button.chip:hover { color: var(--fg); border-color: var(--muted); }
   .chip.mono { font-variant-numeric: tabular-nums; }
+  #topBrain { display: inline-block; max-width: min(220px, 45vw); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 28px; }
   #stateChip[data-state="listening"], #stateChip[data-state="speaking"] { color: var(--accent); border-color: var(--accent); }
   #stateChip[data-state="thinking"] { color: var(--fg); }
   #stateChip[data-state="error"] { color: var(--amber); border-color: var(--amber); }
@@ -1112,6 +1113,7 @@
       const data = await (await api("/api/status")).json();
       state.status = data;
       $("topBrain").textContent = (data.brain?.provider || "—") + "/" + (data.brain?.model || "—");
+      $("topBrain").title = $("topBrain").textContent;
       $("topSpend").textContent = money(data.spend_today ?? data.cost_usd);
       if ($("stateChip").textContent === "Offline") {
         const labels = { idle: "Ready", listening: "Listening", thinking: "Thinking", speaking: "Speaking", error: "Microphone blocked" };
@@ -1361,7 +1363,7 @@
 
   async function refreshFacts() {
     try {
-      const data = await (await api("/api/facts")).json();
+      const data = await (await api("/api/facts?limit=200")).json();
       const facts = data.facts || [];
       const list = $("factList");
       list.innerHTML = "";
@@ -1384,7 +1386,7 @@
         li.textContent = "No facts yet. Say \"remember that ...\" or add one above.";
         list.appendChild(li);
       }
-      $("memoryStatus").textContent = facts.length + " facts";
+      $("memoryStatus").textContent = (data.count ?? facts.length) + " facts";
     } catch (error) {
       $("memoryStatus").textContent = error.message;
     }

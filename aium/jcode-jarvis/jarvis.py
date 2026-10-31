@@ -1368,7 +1368,12 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/events":
             self._send_json(200, {"events": self.core.store.events(30)})
         elif path == "/api/facts":
-            self._send_json(200, {"facts": self.core.store.recall("", 30)})
+            query = urllib.parse.parse_qs(parsed.query)
+            limit = max(1, min(200, self._query_int(query, "limit", 50)))
+            self._send_json(200, {
+                "facts": self.core.store.recall("", limit),
+                "count": self.core.store.facts_count(),
+            })
         elif path == "/api/usage":
             self._send_json(200, self.core.machine_usage() or {})
         else:
@@ -1409,7 +1414,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/api/session":
                 data = self._read_json()
-                self.core.set_session(bool(data.get("enabled")))
+                enabled = data.get("enabled")
+                if not isinstance(enabled, bool):
+                    self._send_json(400, {"error": "enabled must be a boolean"})
+                    return
+                self.core.set_session(enabled)
                 self._send_json(200, {"ok": True, "state": self.core.state})
             elif path == "/api/brain":
                 data = self._read_json()
@@ -1420,7 +1429,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(200, self._test_brain(data))
             elif path == "/api/chat":
                 data = self._read_json()
-                result = self.core.turn(text=data.get("text", ""), lang=data.get("lang", "auto"))
+                text = data.get("text")
+                if not isinstance(text, str) or not text.strip():
+                    self._send_json(400, {"error": "text must be a non-empty string"})
+                    return
+                result = self.core.turn(text=text, lang=data.get("lang", "auto"))
                 self._send_json(200, result)
             elif path == "/api/settings":
                 try:
@@ -1443,7 +1456,11 @@ class Handler(BaseHTTPRequestHandler):
                 if lang not in ("en", "fr"):
                     configured = self.core.settings.get("lang", "auto")
                     lang = configured if configured in ("en", "fr") else "en"
-                audio = self.core.speech.synthesize(data.get("text", ""), lang)
+                text = data.get("text")
+                if not isinstance(text, str) or not text.strip():
+                    self._send_json(400, {"error": "text must be a non-empty string"})
+                    return
+                audio = self.core.speech.synthesize(text, lang)
                 self._send_bytes(200, audio, "audio/wav")
             elif path == "/api/facts":
                 try:
@@ -1523,6 +1540,18 @@ class Handler(BaseHTTPRequestHandler):
         else:
             data = self._read_json()
             text = data.get("text")
+
+        if pcm is not None:
+            if len(pcm) < 3200:
+                self._send_json(400, {"error": "audio is too short"})
+                return
+        else:
+            if not isinstance(text, str):
+                self._send_json(400, {"error": "text must be a string"})
+                return
+            if not text.strip():
+                self._send_json(400, {"error": "text is required"})
+                return
 
         if not stream:
             result = self.core.turn(text=text, pcm=pcm, lang=lang)

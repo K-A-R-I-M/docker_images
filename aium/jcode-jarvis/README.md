@@ -148,7 +148,7 @@ Read-only data for the panel, all authenticated when `JARVIS_TOKEN` is set:
 | `GET /api/history?limit=50&all=0` | recent turns with timings, tokens, cost |
 | `GET /api/cost?days=7` | per-day cost, today, session, last turn |
 | `GET /api/events` | recent supervisor and request events |
-| `GET /api/facts` | stored facts |
+| `GET /api/facts?limit=50` | stored facts plus the total `count` |
 | `GET/POST /api/settings` | `tts`, `lang`, `voice_en`, `voice_fr` (persisted to `/data/settings.json`) |
 | `GET /api/export?what=all\|facts\|turns` | JSON download |
 | `POST /api/facts`, `POST /api/facts/forget` | add a fact, delete one by id |

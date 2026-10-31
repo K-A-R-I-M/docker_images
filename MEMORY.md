@@ -9,9 +9,9 @@ Updated: 2026-10-31 20:15
 - Built: panel shell (Now, Live rail, six tabs), backend endpoints
   `/api/history`, `/api/cost`, `/api/settings`, `/api/export`,
   `/api/facts`, `/api/facts/forget`; settings file; status fields.
-- Verified: 17 unit tests pass; selftest PASS. Backend probes 36 + 31 + 20 + 27,
-  browser flows 43 + 27 + 44 + 17, all 0 failures. axe zero violations light
-  and dark. Fixed 400 mapping, last_turn reset, and unsaved tab edits.
+- Verified: 17 unit tests pass; selftest PASS. Backend probes 36 + 31 + 20 + 27
+  + 25, browser flows 43 + 27 + 44 + 17 + 13, all 0 failures. axe zero
+  violations light and dark. Fixed input validation, facts count, long chip.
 - Blocked: image rebuild needs podman; real mic and Piper audio need hardware.
 
 ## Next step
@@ -45,3 +45,6 @@ Updated: 2026-10-31 20:15
 - 2026-10-31 20:39 - Fourth pass: SSE contract, concurrent turns, brain switch
   persistence, transcript cap, tab edit retention; backend 27 and browser 17
   checks, 0 failures. Fixed 400 mapping, last_turn reset, unsaved tab edits.
+- 2026-10-31 20:43 - Fifth pass: facts limit/count, type validation, voice
+  clear, NULL costs, long content, health flip; backend 25 and browser 13
+  checks, 0 failures. Fixed 500s on bad types, fact truncation, chip overflow.

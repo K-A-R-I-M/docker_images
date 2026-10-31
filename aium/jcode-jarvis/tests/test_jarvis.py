@@ -265,6 +265,10 @@ class JarvisTests(unittest.TestCase):
             self.assertNotIn("/", core.voice_names["en"])
             self.assertEqual(Path(core.voice_paths["en"]).parent, Path("/opt/piper/voices"))
             self.assertTrue(core.voice_paths["en"].endswith(".onnx"))
+            core.settings.merge({"voice_en": ""})
+            core.apply_settings()
+            self.assertEqual(core.voice_names["en"], core.default_voice_names["en"])
+            self.assertEqual(core.voice_paths["en"], core.default_voice_paths["en"])
             core.store.close()
 
     def test_empty_turn_raises_and_releases_lock(self):

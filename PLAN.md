@@ -242,6 +242,27 @@ See "Verification limits".
 - Added a regression test for the empty-turn 400 path and lock release (17
   tests).
 
+## Deep validation 5 (2026-10-31 20:43)
+
+- Backend, 25 checks, 0 failures: clearing a voice override restores the env
+  default; NULL cost rows read as zero; GET on POST-only routes and POST on
+  GET-only routes return 404; facts limit (5, 0, abc) and total count; facts-only
+  and turns-only export scopes; empty and short audio rejected; invalid audio
+  still streams an error event; lock free afterwards; `X-Lang` applied.
+- Fixed: the facts endpoint was hard-capped at 30 with no count, so Memory
+  showed "30 facts" for 45 stored facts. It now takes `limit` (1-200) and
+  returns the true count; the panel asks for 200 and labels the real total.
+- Fixed: non-string `text` on chat/turn/TTS crashed with 500; a string
+  `enabled` of `"false"` enabled the session; short audio returned 200. All now
+  return 400 with a clear message.
+- Browser, 13 checks, 0 failures: 45 facts listed and counted, CJK and
+  1200-character facts wrap without horizontal scroll at 440, health dots flip
+  while the page is open, System export downloads and parses, tab order starts
+  in the top bar.
+- Fixed: an 80-character provider/model overflowed the top bar to 1039 px at
+  440. The brain chip now truncates with an ellipsis and keeps the full text in
+  its title.
+
 ## Verification limits
 
 This environment initially had no `python3`, no `podman`, and no browser

@@ -4,22 +4,23 @@ Updated: 2026-10-31 20:15
 
 ## Current state
 
-- Plan: PLAN.md (v2 built, verification pending)
-- Working on: `aium/jcode-jarvis` v2 control panel
-- Built: panel shell (Now, Live rail, six tabs), backend endpoints
-  `/api/history`, `/api/cost`, `/api/settings`, `/api/export`,
-  `/api/facts`, `/api/facts/forget`; settings file; status fields.
-- Verified: 19 unit tests pass; selftest PASS. Backend probes 139 checks,
-  browser flows 43 + 27 + 44 + 17 + 13 + 15, all 0 failures. axe zero
-  violations light and dark. Diagrams render locally; fence code never spoken.
+- Plan: PLAN.md (v2 built and refactored; hardware verification pending)
+- Working on: `aium/jcode-jarvis` module refactor
+- Built: `jarvis.py` is a 39-line entrypoint; `app/` has config, cost,
+  language, store, router, speech, brain, core, supervisor, api, device.
+  Largest module 414 lines. Tests are pytest, selftest removed.
+- Verified: 20 pytest tests pass; all 5 backend probes and all 6 browser probes
+  report 0 failures; detector clean. Refactor regression found and fixed:
+  supervisor health checks were missing socket/urllib imports.
 - Blocked: image rebuild needs podman; real mic and Piper audio need hardware.
 
 ## Next step
 
-1. Rebuild the image on a podman machine and confirm whisper health.
+1. Rebuild the image on a podman machine; the Dockerfile now copies `app/`.
 2. Test the real microphone and Piper audio; the Voice tab diagnostics settle
    the Firefox report.
-3. v2 is committed except for the last UI polish; nothing else open.
+3. Optional later phase: FastAPI/httpx or the UI split, only after a dependency
+   and latency review.
 
 ## Log (last 10)
 
@@ -51,3 +52,6 @@ Updated: 2026-10-31 20:15
 - 2026-10-31 21:24 - Added mermaid diagrams: persona allows one on request,
   2.7 MB renderer vendored locally, transcript renders fences, speech filter
   skips them. 19 tests; all probes green.
+- 2026-10-31 21:40 - Refactored jarvis.py (1946 lines) into app/ modules with a
+  39-line entrypoint; converted tests to pytest and removed --selftest.
+  Fixed a missing health-check import found by the probes.

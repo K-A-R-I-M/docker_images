@@ -165,12 +165,15 @@ silences server synthesis.
 ## Tests
 
 ```sh
-python3 aium/jcode-jarvis/jarvis.py --selftest
+cd aium/jcode-jarvis
+python3 -m pip install -r requirements-dev.txt
+python3 -m pytest
 ```
 
-The selftest covers language detection, the FR/EN router, SQLite memory, sentence
-streaming, WAV framing, cost calculation, and brain config round-trips. It does
-not need a microphone, Piper, Whisper, or network.
+The suite covers language detection, the FR/EN router, SQLite memory and cost
+queries, settings, sentence streaming, WAV framing, cost calculation, the voice
+path, and the mermaid speech filter. It does not need a microphone, Piper,
+Whisper, or network.
 
 ## Limits
 
@@ -184,13 +187,18 @@ not need a microphone, Piper, Whisper, or network.
 ## Files
 
 ```
-Dockerfile      multi-arch image build
-jarvis.py       HTTP, router, memory, brain, speech, cost, selftest
-index.html      control panel UI (transcript, live events, six tabs)
-vendor/         vendored mermaid build for local diagram rendering
-AGENTS.md       companion persona (also installed as /root/AGENTS.md)
-config.toml     minimal jcode provider config
-brain.toml      default provider/model/fallback
-pricing.json    editable per-model rates
-NOTICE          bundled licenses
+Dockerfile          multi-arch image build
+jarvis.py           entrypoint: args, core, supervisor, server
+app/                package: config, store, router, speech, brain, core,
+                    supervisor, api, device, cost, language
+tests/              pytest suite
+pyproject.toml      pytest settings
+requirements-dev.txt test dependency
+index.html          control panel UI (transcript, live events, six tabs)
+vendor/             vendored mermaid build for local diagram rendering
+AGENTS.md           companion persona (also installed as /root/AGENTS.md)
+config.toml         minimal jcode provider config
+brain.toml          default provider/model/fallback
+pricing.json        editable per-model rates
+NOTICE              bundled licenses
 ```

@@ -1,7 +1,7 @@
 # Plan: `aium:jcode-jarvis` v2 control panel
 
-Status: built, verification pending (runtime untested here)
-Updated: 2026-10-31 20:15
+Status: built, refactored into modules, verification pending on hardware
+Updated: 2026-10-31 21:40
 
 ## Goal
 
@@ -283,6 +283,39 @@ for a schema or a diagram, and keep everything else plain spoken text.
 - Validation: 19 unit tests, a 15-check browser probe (local-only resources,
   axe clean, fallback, mobile scroll), and the full regression suite stay green.
 - Image impact: about 2.7 MB; the 5 GB cap is untouched.
+
+## Module refactor (2026-10-31 21:40)
+
+Goal: make the code readable without changing behavior or adding runtime
+dependencies. The standard library server stays.
+
+Before: one `jarvis.py` of 1946 lines containing HTTP, auth, SSE, storage,
+routing, brain, speech, supervision, device audio, and a selftest.
+
+After:
+
+- `jarvis.py` is 39 lines: args, Core, Supervisor, serve or device loop.
+- `app/` holds one concern per module: `config` 131, `cost` 30, `language` 38,
+  `store` 414, `router` 85, `speech` 216, `brain` 213, `core` 265,
+  `supervisor` 134, `api` 409, `device` 64.
+- Largest file dropped from 1946 to 414 lines; the entrypoint is wiring only.
+- Tests moved to pytest: 20 functions in `tests/test_jarvis.py`, `pyproject.toml`
+  sets `testpaths` and `pythonpath`, `requirements-dev.txt` pins pytest. The
+  `--selftest` flag and its duplicate 45-line routine are gone.
+- `Dockerfile` copies `app/`; README describes the new layout and test command.
+
+No behavior changes were intended. The full contract probes were rerun
+unchanged. They found one real regression: the extracted supervisor module
+lacked the `socket` and `urllib` imports used by the health checks, so whisper
+and Piper always read as off. Imports restored, plus a `test_health_checks`
+regression test.
+
+Verification: 20 pytest tests pass, all 5 backend probes and all 6 browser
+probes report 0 failures, and the Impeccable detector stays clean.
+
+Not done, deliberately: FastAPI/uvicorn/Pydantic/httpx, ORM, async handlers, UI
+split. Those are a separate phase with their own dependency and latency review.
+Image rebuild still pending.
 
 ## Verification limits
 

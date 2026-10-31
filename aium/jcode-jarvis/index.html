@@ -118,7 +118,7 @@
     min-height: 0;
   }
   .workspace > .banner { grid-column: 1 / -1; }
-  .main { display: grid; grid-template-rows: minmax(0, 1fr) 300px; gap: 14px; min-height: 0; }
+  .main { display: grid; grid-template-rows: minmax(0, 1fr) clamp(300px, 46vh, 460px); gap: 14px; min-height: 0; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
 
   /* now */
@@ -260,6 +260,7 @@
   .pill.ok { color: var(--accent); border-color: var(--accent); }
   .pill.bad { color: var(--amber); border-color: var(--amber); }
   .chart { display: flex; align-items: flex-end; gap: 8px; height: 92px; padding: 4px 0 0; }
+  .chart.empty { align-items: center; }
   .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; height: 100%; }
   .bar .fill { width: 100%; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 3px; min-height: 2px; }
   .bar .lbl { font-size: 11px; color: var(--muted); }
@@ -1188,6 +1189,12 @@
       });
       renderLogs();
       $("logStatus").textContent = state.events.length + " events";
+      if (!state.events.length) {
+        const empty = document.createElement("p");
+        empty.className = "hint";
+        empty.textContent = "No activity yet. Turns and supervisor messages appear here.";
+        feed.appendChild(empty);
+      }
     } catch (_) {}
   }
 
@@ -1233,6 +1240,9 @@
   function fillSelect(select, items, current) {
     select.innerHTML = "";
     const seen = new Set();
+    if (current && !items.some((item) => item.value === current)) {
+      items = [{ value: current, label: current + " (current)" }, ...items];
+    }
     items.forEach((item) => {
       if (seen.has(item.value)) return;
       seen.add(item.value);
@@ -1287,9 +1297,17 @@
       $("costSession").textContent = money(cost.session);
       $("costLast").textContent = money(cost.last);
       const days = cost.days || [];
-      const max = Math.max(0.000001, ...days.map((d) => Number(d.cost_usd || 0)));
+      const total = days.reduce((sum, day) => sum + Number(day.cost_usd || 0), 0);
       $("costChart").innerHTML = "";
-      days.forEach((day) => {
+      $("costChart").classList.toggle("empty", total <= 0);
+      if (total <= 0) {
+        const empty = document.createElement("p");
+        empty.className = "hint";
+        empty.textContent = "No cloud spend in the last 7 days. Local speech and routing are free.";
+        $("costChart").appendChild(empty);
+      }
+      const max = Math.max(0.000001, ...days.map((d) => Number(d.cost_usd || 0)));
+      if (total > 0) days.forEach((day) => {
         const bar = document.createElement("div");
         bar.className = "bar";
         bar.title = day.date + ": " + money(day.cost_usd) + " · " + day.turns + " turns";
@@ -1406,6 +1424,7 @@
 
   function activateTab(name) {
     state.tab = name;
+    if (history.replaceState) history.replaceState(null, "", "#" + name);
     document.querySelectorAll(".tab").forEach((tab) => {
       const on = tab.dataset.tab === name;
       tab.setAttribute("aria-selected", String(on));
@@ -1594,6 +1613,8 @@
 
   setLevel(0);
   setState("idle", "Ready");
+  const initialTab = location.hash.slice(1);
+  if (["brain", "voice", "memory", "cost", "system", "logs"].includes(initialTab)) activateTab(initialTab);
   refreshSettings();
   refreshStatus();
   refreshHealth();

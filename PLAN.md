@@ -148,11 +148,26 @@ See "Verification limits".
 4. Screenshots at 1440x900, 1280x800, 440x900 in light and dark.
 5. Full gate: unit tests, selftest, local HTTP smoke, image rebuild.
 
+## Verification results (2026-10-31 20:20)
+
+- `python3 -m unittest discover -s tests`: 14 tests, OK.
+- `python3 jarvis.py --selftest`: PASS.
+- Endpoint smoke on a temp data dir: page 200 (64 kB), status, health,
+  settings GET/POST, history, cost, facts add/list/forget-by-id, events, export
+  all 200 with the documented shapes.
+- Two local SSE turns stored user+assistant rows with timings and cost; history
+  and cost endpoints reflect them.
+- Screenshots at 1440x900, 1280x800, 440x900, and dark. Voice tab now fits
+  without clipping; cost tab shows an empty state when spend is zero.
+- Impeccable detector: no findings. JS bracket balance and id cross-check clean.
+- Pending: image rebuild (no podman here) and real microphone/Piper on hardware.
+
 ## Verification limits
 
-This session's environment has no `python3`, no `podman`, and no browser
-bridge. Phase 0.2, phase 1.5, phase 3.3-3.5 must run where those exist, or the
-user runs them and pastes the output. Do not claim them as verified.
+This environment initially had no `python3`, no `podman`, and no browser
+bridge. `python3` and headless Chromium were installed for verification; the
+image rebuild still needs a machine with podman. The microphone and Piper audio
+need real hardware and remain untested.
 
 ## Out of scope
 

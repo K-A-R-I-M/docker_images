@@ -9,18 +9,17 @@ Updated: 2026-10-31 20:15
 - Built: panel shell (Now, Live rail, six tabs), backend endpoints
   `/api/history`, `/api/cost`, `/api/settings`, `/api/export`,
   `/api/facts`, `/api/facts/forget`; settings file; status fields.
-- Verified: Impeccable detector clean; JS bracket balance clean; every JS id
-  exists; backend diff reviewed. No runtime run: no python3, podman, browser.
-- Blocked: tests, selftest, HTTP smoke, screenshots, image rebuild need the
-  user's machine.
+- Verified: 14 unit tests pass; selftest PASS; endpoint smoke passes (status,
+  health, settings, history, cost, facts, export); two SSE turns store history;
+  screenshots at 1440x900, 1280x800, 440x900, dark; detector clean.
+- Blocked: image rebuild needs podman; real mic and Piper audio need hardware.
 
 ## Next step
 
-1. User runs `python3 -m unittest discover -s tests` and
-   `python3 jarvis.py --selftest` in `aium/jcode-jarvis`, then rebuilds the
-   image and confirms whisper health.
-2. Open the panel and check mic diagnostics, transcript, cost tab, and memory.
-3. Still open: Firefox mic cause, screenshots, commit.
+1. Rebuild the image on a podman machine and confirm whisper health.
+2. Test the real microphone and Piper audio; the Voice tab diagnostics settle
+   the Firefox report.
+3. v2 is committed except for the last UI polish; nothing else open.
 
 ## Log (last 10)
 
@@ -32,3 +31,6 @@ Updated: 2026-10-31 20:15
   PRODUCT.md and v2 plan with frozen API contract. No code yet.
 - 2026-10-31 20:15 - Built v2: panel rewrite, six tabs, backend endpoints and
   settings, DESIGN.md, tests. Detector clean; runtime verification pending.
+- 2026-10-31 20:20 - Verified: 14 tests, selftest, endpoint smoke, SSE history,
+  screenshots at four sizes. Fixed tab clipping, cost empty state, provider
+  select, stale mic device, TTS-off fallback.

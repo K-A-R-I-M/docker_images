@@ -1,0 +1,17 @@
+Jarvis NOTICE
+=============
+
+This image bundles third-party software and model data. Review the upstream
+licenses before redistributing the image.
+
+- jcode: https://github.com/1jehuang/jcode
+- whisper.cpp: MIT, https://github.com/ggml-org/whisper.cpp
+- OpenAI Whisper models: MIT, https://github.com/openai/whisper
+- Piper (piper1-gpl): GPL-3.0, https://github.com/OHF-Voice/piper1-gpl
+- espeak-ng: GPL-3.0, https://github.com/espeak-ng/espeak-ng
+- Piper voice en_US-lessac-medium and fr_FR-siwis-medium: see the license field
+  in each voice's .onnx.json under https://huggingface.co/rhasspy/piper-voices
+- Silero VAD model: see https://github.com/snakers4/silero-vad
+
+If you distribute this image, include the corresponding source for the GPL
+components (Piper and espeak-ng) and preserve the upstream notices.

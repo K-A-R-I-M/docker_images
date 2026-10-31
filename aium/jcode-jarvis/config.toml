@@ -1,0 +1,11 @@
+[provider]
+default_provider = "deepseek"
+
+[display]
+
+[features]
+memory = false
+swarm = false
+
+[agents]
+swarm_spawn_mode = "headless"

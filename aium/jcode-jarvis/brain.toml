@@ -1,0 +1,6 @@
+[brain]
+backend = "jcode"
+provider = "deepseek"
+model = "deepseek-v4-flash"
+fallback = []
+timeout_ms = 30000

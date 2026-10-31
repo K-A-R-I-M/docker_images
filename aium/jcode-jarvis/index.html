@@ -180,6 +180,10 @@
   .msg .body { font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
   .msg.user .body { color: var(--muted); }
   .msg.jarvis .body { font-size: 15px; }
+  .seg { white-space: pre-wrap; }
+  .mermaid { margin: 8px 0; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); overflow-x: auto; max-width: 100%; }
+  .mermaid svg { max-width: 100%; height: auto; }
+  .mermaid.failed { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap; }
   .empty { color: var(--muted); font-size: 13px; margin: auto 0; max-width: 44ch; }
   .breakdown {
     display: flex;
@@ -513,6 +517,7 @@
   </main>
 </div>
 
+<script src="/vendor/mermaid.min.js"></script>
 <script>
 (() => {
   "use strict";
@@ -522,6 +527,16 @@
   const MIN_FRAMES = 3;
   const MAX_FRAMES = 120;
   const RING = 2 * Math.PI * 54;
+
+  if (window.mermaid) {
+    try {
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "neutral",
+      });
+    } catch (_) {}
+  }
 
   const state = {
     enabled: false,
@@ -668,10 +683,73 @@
     who.textContent = role === "assistant" ? "Jarvis" : role === "user" ? "You" : role;
     const body = document.createElement("div");
     body.className = "body";
-    if (live) body.id = "liveReplyBody";
-    body.textContent = text;
+    if (live) {
+      body.id = "liveReplyBody";
+      body.textContent = text;
+    } else {
+      appendRichText(body, text);
+    }
     wrap.append(who, body);
     return wrap;
+  }
+
+  function textSegment(text) {
+    const node = document.createElement("div");
+    node.className = "seg";
+    node.textContent = text;
+    return node;
+  }
+
+  function appendRichText(container, text) {
+    const fence = /```mermaid[ \t]*\r?\n([\s\S]*?)```/gi;
+    let last = 0;
+    let match;
+    while ((match = fence.exec(text || ""))) {
+      if (match.index > last) container.appendChild(textSegment(text.slice(last, match.index)));
+      const code = (match[1] || "").trim();
+      if (code) {
+        const diagram = document.createElement("div");
+        diagram.className = "mermaid";
+        diagram.tabIndex = 0;
+        diagram.setAttribute("role", "img");
+        diagram.setAttribute("aria-label", "Diagram");
+        diagram.textContent = code;
+        diagram.dataset.code = code;
+        container.appendChild(diagram);
+      }
+      last = fence.lastIndex;
+    }
+    const rest = (text || "").slice(last);
+    if (rest || last === 0) container.appendChild(textSegment(rest));
+  }
+
+  function renderDiagrams(root) {
+    if (!window.mermaid) return;
+    root.querySelectorAll(".mermaid[data-code]").forEach((node) => {
+      const code = node.dataset.code;
+      delete node.dataset.code;
+      const id = "mmd" + Math.random().toString(36).slice(2);
+      try {
+        Promise.resolve(mermaid.render(id, code)).then((result) => {
+          node.innerHTML = result.svg;
+          const svg = node.querySelector("svg");
+          if (svg && svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width) {
+            const box = svg.viewBox.baseVal;
+            const width = Math.round(Math.min(Math.max(box.width, 260), 1100));
+            svg.style.maxWidth = "none";
+            svg.style.width = width + "px";
+            svg.style.height = "auto";
+          }
+          node.classList.add("rendered");
+        }).catch(() => {
+          node.textContent = code;
+          node.classList.add("failed");
+        });
+      } catch (_) {
+        node.textContent = code;
+        node.classList.add("failed");
+      }
+    });
   }
 
   function nearBottom(box) {
@@ -692,6 +770,7 @@
     state.turns.forEach((turn) => box.appendChild(messageEl(turn.role, turn.text)));
     if (state.liveUser) box.appendChild(messageEl("user", state.liveUser));
     if (state.liveReply) box.appendChild(messageEl("assistant", state.liveReply, true));
+    renderDiagrams(box);
     if (stick) box.scrollTop = box.scrollHeight;
   }
 

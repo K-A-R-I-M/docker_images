@@ -12,6 +12,7 @@ licenses before redistributing the image.
 - Piper voice en_US-lessac-medium and fr_FR-siwis-medium: see the license field
   in each voice's .onnx.json under https://huggingface.co/rhasspy/piper-voices
 - Silero VAD model: see https://github.com/snakers4/silero-vad
+- Mermaid diagram renderer: MIT, https://github.com/mermaid-js/mermaid
 
 If you distribute this image, include the corresponding source for the GPL
 components (Piper and espeak-ng) and preserve the upstream notices.

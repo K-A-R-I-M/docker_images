@@ -54,6 +54,11 @@ device, browser mic diagnostics), Memory (facts, add, forget, export), Cost
 uptime, database size, token, export), and Logs (filterable events). The token
 is saved in System.
 
+Diagrams: when the user explicitly asks for a schema or a diagram, Jarvis may
+reply with one fenced mermaid block. The transcript renders it locally with the
+vendored `vendor/mermaid.min.js`; nothing is fetched from the internet, and the
+block is never spoken. All other replies stay plain text.
+
 ## Run, device mode
 
 Linux host with `/dev/snd`:
@@ -182,6 +187,7 @@ not need a microphone, Piper, Whisper, or network.
 Dockerfile      multi-arch image build
 jarvis.py       HTTP, router, memory, brain, speech, cost, selftest
 index.html      control panel UI (transcript, live events, six tabs)
+vendor/         vendored mermaid build for local diagram rendering
 AGENTS.md       companion persona (also installed as /root/AGENTS.md)
 config.toml     minimal jcode provider config
 brain.toml      default provider/model/fallback

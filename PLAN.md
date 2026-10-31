@@ -263,6 +263,27 @@ See "Verification limits".
   440. The brain chip now truncates with an ellipsis and keeps the full text in
   its title.
 
+## Mermaid diagrams (2026-10-31 21:23)
+
+Requested follow-up: allow a fenced mermaid block when the user explicitly asks
+for a schema or a diagram, and keep everything else plain spoken text.
+
+- Persona: one fenced mermaid block is allowed only after an explicit schema or
+  diagram request; it sits after a short spoken sentence. Everything else stays
+  plain text.
+- Rendering: mermaid 11.12.1 is vendored at `vendor/mermaid.min.js` (2.7 MB) and
+  served locally from `/vendor/mermaid.min.js`. No CDN, no runtime download.
+  Diagrams render in completed transcript turns only; streaming text stays
+  plain. Invalid diagrams fall back to their code. Wide diagrams keep a readable
+  width and scroll inside their own box.
+- Speech: a `SpeechFence` filter drops fenced blocks from sentence events, so
+  the voice never reads diagram code. The full reply, fence included, is still
+  streamed and stored.
+- Dockerfile copies `vendor/`; NOTICE lists mermaid's MIT license.
+- Validation: 19 unit tests, a 15-check browser probe (local-only resources,
+  axe clean, fallback, mobile scroll), and the full regression suite stay green.
+- Image impact: about 2.7 MB; the 5 GB cap is untouched.
+
 ## Verification limits
 
 This environment initially had no `python3`, no `podman`, and no browser

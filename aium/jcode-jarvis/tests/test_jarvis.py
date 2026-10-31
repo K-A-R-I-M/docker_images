@@ -279,6 +279,41 @@ class JarvisTests(unittest.TestCase):
                     core.turn(text="")
             core.store.close()
 
+    def test_speech_fence(self):
+        fence = jarvis.SpeechFence()
+        self.assertEqual(fence.feed("Hello."), ["Hello."])
+        self.assertEqual(fence.feed("```mermaid"), [])
+        self.assertEqual(fence.feed("graph TD; A-->B"), [])
+        self.assertEqual(fence.feed("```"), [])
+        self.assertEqual(fence.feed("Done."), ["Done."])
+        inline = jarvis.SpeechFence()
+        self.assertEqual(inline.feed("Before. ```mermaid\nA-->B\n``` After."), ["Before.", "After."])
+        self.assertEqual(inline.feed("Plain."), ["Plain."])
+
+    def test_turn_filters_fenced_speech(self):
+        class FakeBrain:
+            def complete(self, text, lang, on_delta, on_sentence):
+                on_delta("Here. ```mermaid\n")
+                on_sentence("Here. ```mermaid")
+                on_sentence("graph TD")
+                on_sentence("``` Done.")
+                return jarvis.BrainResult(
+                    "Here. ```mermaid\ngraph TD\n``` Done.", "p", "m", {}, None, 1
+                )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            core = jarvis.Core(argparse.Namespace(data_dir=tmp))
+            core.brain = FakeBrain()
+            events = []
+            core.turn(text="draw it", lang="en", emit=events.append)
+            sentences = [event["text"] for event in events if event["type"] == "sentence"]
+            self.assertEqual(" ".join(sentences), "Here. Done.")
+            self.assertFalse(any("graph" in sentence for sentence in sentences))
+            done = events[-1]
+            self.assertEqual(done["type"], "done")
+            self.assertIn("```mermaid", done["reply"])
+            core.store.close()
+
 
 if __name__ == "__main__":
     unittest.main()

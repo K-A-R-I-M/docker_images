@@ -116,6 +116,22 @@ def split_sentences(text: str) -> list[str]:
     return parts
 
 
+class SpeechFence:
+    """Drop fenced blocks (such as mermaid diagrams) from spoken sentences."""
+
+    def __init__(self) -> None:
+        self.inside = False
+
+    def feed(self, text: str) -> list[str]:
+        out: list[str] = []
+        for index, part in enumerate((text or "").split("```")):
+            if index:
+                self.inside = not self.inside
+            if not self.inside and part.strip():
+                out.append(part.strip())
+        return out
+
+
 class SentenceBuffer:
     """Split streamed text into speakable sentences."""
 
@@ -1226,15 +1242,18 @@ class Core:
             provider = "local"
             model = "router"
             ttft_ms = 0
+            speech = SpeechFence()
             if route.reply is not None:
                 reply = route.reply
-                self.emit(emit, {"type": "sentence", "text": reply})
+                for speakable in speech.feed(reply):
+                    self.emit(emit, {"type": "sentence", "text": speakable})
             else:
                 def on_delta(delta: str) -> None:
                     self.emit(emit, {"type": "delta", "text": delta})
 
                 def on_sentence(sentence: str) -> None:
-                    self.emit(emit, {"type": "sentence", "text": sentence})
+                    for speakable in speech.feed(sentence):
+                        self.emit(emit, {"type": "sentence", "text": speakable})
 
                 result = self.brain.complete(text, lang, on_delta, on_sentence)
                 reply = result.text
@@ -1335,6 +1354,14 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(500, {"error": "index.html missing"})
                 return
             self._send_bytes(200, body, "text/html; charset=utf-8")
+            return
+        if path == "/vendor/mermaid.min.js":
+            try:
+                body = (ROOT / "vendor" / "mermaid.min.js").read_bytes()
+            except OSError:
+                self._send_json(404, {"error": "not found"})
+                return
+            self._send_bytes(200, body, "text/javascript; charset=utf-8")
             return
         if not self._auth_ok():
             return

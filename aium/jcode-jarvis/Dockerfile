@@ -103,6 +103,7 @@ COPY --from=piper-builder /opt/piper /opt/piper
 
 WORKDIR /opt/jarvis
 COPY jarvis.py index.html AGENTS.md config.toml brain.toml pricing.json NOTICE ./
+COPY vendor ./vendor
 
 RUN mkdir -p /root/.jcode /data \
     && cp /opt/jarvis/AGENTS.md /root/AGENTS.md \

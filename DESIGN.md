@@ -52,6 +52,11 @@ Operate mode. Desktop first.
 - `.msg`: transcript block; role label 11px muted; assistant text 14px.
 - `.meter`: 4px bar, accent fill.
 - `.diag`: 12px monospace-free key/value rows; shows browser facts verbatim.
+- `.mermaid`: rendered diagram panel, 1px border, 10px radius, `--bg` fill,
+  horizontal scroll for wide diagrams, focusable with `role="img"` and
+  `aria-label="Diagram"`. Failed diagrams fall back to the code in a 12px
+  monospace block. Diagrams render only from a ```mermaid fence and only in
+  completed turns.
 
 ## Motion
 

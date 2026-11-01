@@ -15,6 +15,7 @@ export async function refreshBrain(provider) {
     fillSelect($("modelSel"), (data.models || []).map((m) => ({ value: m, label: m })), data.config?.model || "");
     $("brainStatus").textContent = "Current: " + (data.config?.provider || "—") + "/" + (data.config?.model || "—");
     $("brainFallback").textContent = (data.config?.fallback || []).join(", ") || "none";
+    $("skillsEnabled").checked = data.config?.skills === true;
     state.brainLoaded = true;
   } catch (error) {
     $("brainStatus").textContent = error.message;

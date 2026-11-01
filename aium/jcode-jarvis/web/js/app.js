@@ -61,8 +61,8 @@ document.querySelectorAll(".dot").forEach((dot) => {
 $("provider").addEventListener("change", () => refreshBrain($("provider").value));
 $("applyBrain").addEventListener("click", async () => {
   try {
-    await api("/api/brain", { method: "POST", body: JSON.stringify({ provider: $("provider").value, model: $("modelSel").value }) });
-    $("brainStatus").textContent = "Applied " + $("provider").value + "/" + $("modelSel").value;
+    await api("/api/brain", { method: "POST", body: JSON.stringify({ provider: $("provider").value, model: $("modelSel").value, skills: $("skillsEnabled").checked }) });
+    $("brainStatus").textContent = "Applied " + $("provider").value + "/" + $("modelSel").value + ($("skillsEnabled").checked ? " with skills" : "");
     state.lastDone = null;
     refreshStatus();
   } catch (error) {

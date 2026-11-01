@@ -37,6 +37,8 @@ function appendRichText(container, text) {
     if (match.index > last) container.appendChild(textSegment(text.slice(last, match.index)));
     const code = (match[1] || "").trim();
     if (code) {
+      const wrap = document.createElement("div");
+      wrap.className = "diagram";
       const diagram = document.createElement("div");
       diagram.className = "mermaid";
       diagram.tabIndex = 0;
@@ -44,7 +46,8 @@ function appendRichText(container, text) {
       diagram.setAttribute("aria-label", "Diagram");
       diagram.textContent = code;
       diagram.dataset.code = code;
-      container.appendChild(diagram);
+      wrap.appendChild(diagram);
+      container.appendChild(wrap);
     }
     last = fence.lastIndex;
   }

@@ -57,8 +57,9 @@ is saved in System.
 Diagrams: when the user explicitly asks for a schema or a diagram, Jarvis may
 reply with one fenced mermaid block. The transcript renders it locally with the
 vendored `web/vendor/mermaid.min.js`, fetched only when a diagram appears; nothing
-is fetched from the internet, and the block is never spoken. All other replies
-stay plain text.
+is fetched from the internet, and the block is never spoken. Each rendered
+diagram has a Copy source button that copies the original mermaid text. All
+other replies stay plain text.
 
 ## Run, device mode
 
@@ -87,6 +88,10 @@ environment:
 -e JARVIS_BRAIN_PROVIDER=deepseek
 -e JARVIS_BRAIN_MODEL=deepseek-v4-flash
 ```
+
+The Brain tab can also allow skills. That exposes jcode's skill loader only, so
+the assistant can load a skill's instructions when you name one; it still has no
+shell, browser, or file tools. Off by default.
 
 The selected pair is written to `/data/brain.toml`. A fallback list is
 supported:

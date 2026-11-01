@@ -82,6 +82,10 @@ def test_brain_config(tmp_path, monkeypatch):
     assert loaded["model"] == "m"
     assert loaded["fallback"] == ["openai:gpt"]
     assert loaded["timeout_ms"] == 1000
+    assert loaded["skills"] is False
+
+    save_brain(path, {**loaded, "skills": True})
+    assert load_brain(path)["skills"] is True
 
 
 def test_rms():

@@ -18,6 +18,7 @@ DEFAULT_BRAIN = {
     "model": "deepseek-v4-flash",
     "fallback": [],
     "timeout_ms": 30000,
+    "skills": False,
 }
 
 
@@ -60,6 +61,7 @@ def load_brain(path: Path) -> dict:
         config["timeout_ms"] = int(config.get("timeout_ms", 30000))
     except Exception:
         config["timeout_ms"] = 30000
+    config["skills"] = bool(config.get("skills", False))
     return config
 
 
@@ -73,6 +75,7 @@ def save_brain(path: Path, config: dict) -> None:
         f'model = {json.dumps(config.get("model", ""))}\n'
         f"fallback = [{fallback}]\n"
         f'timeout_ms = {int(config.get("timeout_ms", 30000))}\n'
+        f"skills = {json.dumps(bool(config.get('skills', False)))}\n"
     )
     # Atomic replace so a crash cannot leave a half-written brain.toml.
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -172,6 +172,7 @@
   .msg.user .body { color: var(--muted); }
   .msg.jarvis .body { font-size: 15px; }
   .seg { white-space: pre-wrap; }
+  .diagram-tools { display: flex; justify-content: flex-end; margin: 8px 0 -4px; }
   .mermaid { margin: 8px 0; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); overflow-x: auto; max-width: 100%; }
   .mermaid svg { max-width: 100%; height: auto; }
   .mermaid.failed { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap; }
@@ -243,6 +244,8 @@
   .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 14px; }
   .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
   .field > select, .field > input { width: 100%; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--fg); cursor: pointer; }
+  .check input { width: 16px; height: 16px; accent-color: var(--accent); }
   .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
   .hint { font-size: 12px; color: var(--muted); margin: 0; }
   .rows { display: grid; gap: 3px; }

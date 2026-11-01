@@ -76,6 +76,9 @@ class Brain:
         parts.append(f"User: {text}")
         parts.append("Reply in French." if lang == "fr" else "Reply in English.")
         parts.append("Jarvis:")
+        if self.core.brain_config.get("skills"):
+            # Only the skill loader is exposed; other tools stay disabled.
+            parts.append("Skills are available: load one with skill_manage when the user names it.")
         return "\n".join(parts)
 
     def complete(self, text: str, lang: str, on_delta=None, on_sentence=None) -> BrainResult:
@@ -116,6 +119,9 @@ class Brain:
             return BrainResult(text, "mock", "mock", {}, 0.0, 0)
 
         cmd = ["jcode", "run", "--ndjson", "--disable-base-tools", "--no-update", "--quiet"]
+        # Skills are instructions only: expose skill_manage and nothing else.
+        if self.core.brain_config.get("skills"):
+            cmd += ["--tools", "skill_manage"]
         if provider:
             cmd += ["-p", provider]
         if model:

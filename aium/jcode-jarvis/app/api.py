@@ -377,6 +377,7 @@ class Handler(BaseHTTPRequestHandler):
             "model": model,
             "fallback": [clean(item) for item in fallback if clean(item)],
             "timeout_ms": self.core.brain_config.get("timeout_ms", 30000),
+            "skills": bool(data.get("skills", self.core.brain_config.get("skills", False))),
         }
         save_brain(self.core.brain_path, self.core.brain_config)
         self.core.store.event("info", "brain", f"{provider}/{model}")

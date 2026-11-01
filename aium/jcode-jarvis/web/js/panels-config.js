@@ -54,6 +54,7 @@ export async function refreshSettings() {
     $("langChip").textContent = state.lang === "auto" ? "Auto" : state.lang.toUpperCase();
     $("langSel").value = state.lang;
     $("ttsSel").value = data.tts === false ? "off" : "on";
+    $("silenceSel").value = String(data.silence_ms || 1200);
     $("voiceEn").value = data.voice_en || "";
     $("voiceFr").value = data.voice_fr || "";
     $("voiceModel").textContent = data.whisper_model || "—";
@@ -69,13 +70,14 @@ export async function saveSettings(partial) {
     state.settings = data;
     state.lang = data.lang || state.lang;
     $("langChip").textContent = state.lang === "auto" ? "Auto" : state.lang.toUpperCase();
-    $("voiceStatus").textContent = "Saved. Applies to the next turn.";
-    const sync = { lang: $("langSel"), tts: $("ttsSel"), voice_en: $("voiceEn"), voice_fr: $("voiceFr") };
+    $("voiceStatus").textContent = "Saved.";
+    const sync = { lang: $("langSel"), tts: $("ttsSel"), voice_en: $("voiceEn"), voice_fr: $("voiceFr"), silence_ms: $("silenceSel") };
     Object.keys(partial).forEach((key) => {
       if (key === "lang") sync.lang.value = data.lang;
       else if (key === "tts") sync.tts.value = data.tts === false ? "off" : "on";
       else if (key === "voice_en") sync.voice_en.value = data.voice_en || "";
       else if (key === "voice_fr") sync.voice_fr.value = data.voice_fr || "";
+      else if (key === "silence_ms") sync.silence_ms.value = String(data.silence_ms);
     });
     return data;
   } catch (error) {

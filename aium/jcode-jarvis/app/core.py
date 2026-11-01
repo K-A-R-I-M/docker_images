@@ -106,6 +106,7 @@ class Core:
             "lang": values.get("lang", "auto"),
             "voice_en": values.get("voice_en", ""),
             "voice_fr": values.get("voice_fr", ""),
+            "silence_ms": int(values.get("silence_ms", 1200)),
             "whisper_model": self.whisper_model,
             "profile": self.profile,
         }

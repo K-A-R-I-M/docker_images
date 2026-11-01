@@ -10,11 +10,23 @@ export function initAudio(send) {
   sendUtterance = send;
 }
 
-// VAD: RMS gate, ~0.8 s of silence, ~15 s max utterance.
+// VAD: RMS gate, endpoint delay, short utterance, and max utterance.
 const THRESHOLD = 0.025;
-const SILENCE_FRAMES = 6;
-const MIN_FRAMES = 3;
-const MAX_FRAMES = 120;
+const VAD_POLICY = { silenceMs: 1200, minSpeechMs: 400, maxUtteranceMs: 15000 };
+/** End-of-turn wait in ms; the Voice tab can change this live. */
+function endpointMs() {
+  const value = Number(state.settings?.silence_ms);
+  return Number.isFinite(value) && value > 0 ? Math.min(4000, Math.max(600, value)) : VAD_POLICY.silenceMs;
+}
+/** Clear capture state after a turn, a stop, or a barge-in. */
+function resetVad() {
+  state.frames = [];
+  state.speaking = false;
+  state.silenceMs = 0;
+  state.speechMs = 0;
+  state.utteranceMs = 0;
+}
+
 const RING = 2 * Math.PI * 54;
 /** Drive the level ring and the mic meter from 0 to 1. */
 export function setLevel(value) {
@@ -53,9 +65,7 @@ export async function startSession(forceDefault = false) {
     state.source.connect(state.processor);
     state.processor.connect(state.ctx.destination);
     state.enabled = true;
-    state.frames = [];
-    state.speaking = false;
-    state.silence = 0;
+    resetVad();
     state.lastMicError = "";
     setState("listening", "Listening");
     await api("/api/session", { method: "POST", body: JSON.stringify({ enabled: true }) });
@@ -106,9 +116,7 @@ function stopCapture() {
   state.source = null;
   state.stream = null;
   state.ctx = null;
-  state.frames = [];
-  state.speaking = false;
-  state.silence = 0;
+  resetVad();
 }
 
 /** Linear resample to the 16 kHz whisper expects. */
@@ -143,6 +151,7 @@ function onAudio(event) {
     sum += sample * sample;
   }
   const rms = Math.sqrt(sum / input.length);
+  const durationMs = (raw.length / state.sampleRate) * 1000;
   setLevel(state.level * 0.7 + Math.min(1, rms * 4) * 0.3);
 
   if (state.ui === "speaking" && rms > 0.04) {
@@ -153,31 +162,31 @@ function onAudio(event) {
     }
     api("/api/cancel", { method: "POST" }).catch(() => {});
     setState("listening", "Listening");
-    state.frames = [];
-    state.speaking = false;
-    state.silence = 0;
+    resetVad();
   }
   if (state.ui === "thinking") return;
 
   if (rms > THRESHOLD) {
     state.speaking = true;
-    state.silence = 0;
+    state.silenceMs = 0;
+    state.speechMs += durationMs;
+    state.utteranceMs += durationMs;
     state.frames.push(pcm);
-    if (state.frames.length > MAX_FRAMES) finalizeUtterance();
+    if (state.utteranceMs >= VAD_POLICY.maxUtteranceMs) finalizeUtterance();
   } else if (state.speaking) {
-    state.silence += 1;
+    state.silenceMs += durationMs;
+    state.utteranceMs += durationMs;
     state.frames.push(pcm);
-    if (state.silence >= SILENCE_FRAMES) finalizeUtterance();
+    if (state.silenceMs >= endpointMs()) finalizeUtterance();
   }
 }
 
 /** Join captured frames and hand them to the turn pipeline. */
 function finalizeUtterance() {
   const frames = state.frames;
-  state.frames = [];
-  state.speaking = false;
-  state.silence = 0;
-  if (frames.length < MIN_FRAMES) return;
+  const speechMs = state.speechMs;
+  resetVad();
+  if (speechMs < VAD_POLICY.minSpeechMs) return;
   let length = 0;
   frames.forEach((frame) => { length += frame.length; });
   const pcm = new Int16Array(length);
@@ -211,9 +220,7 @@ function playNext() {
   }
   const url = state.audioQueue.shift();
   state.playing = true;
-  state.frames = [];
-  state.speaking = false;
-  state.silence = 0;
+  resetVad();
   setState("speaking", "Speaking");
   const audio = new Audio(url);
   state.currentAudio = audio;
@@ -239,9 +246,7 @@ function playNext() {
 /** Use the browser voice when server audio is missing. */
 export function speakFallback(text, lang) {
   if (!("speechSynthesis" in window)) return;
-  state.frames = [];
-  state.speaking = false;
-  state.silence = 0;
+  resetVad();
   state.fallbackCount += 1;
   state.playing = true;
   setState("speaking", "Speaking");

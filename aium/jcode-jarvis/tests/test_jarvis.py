@@ -171,6 +171,14 @@ def test_settings(tmp_path):
     settings.merge({"tts": False, "lang": "fr"})
     assert settings.get("tts") is False
     assert settings.get("lang") == "fr"
+    assert settings.get("silence_ms") == 1200
+
+    settings.merge({"silence_ms": 3000})
+    assert settings.get("silence_ms") == 3000
+    settings.merge({"silence_ms": 100})
+    assert settings.get("silence_ms") == 600
+    settings.merge({"silence_ms": "2000"})
+    assert settings.get("silence_ms") == 600
 
     reloaded = Settings(path)
     assert reloaded.get("tts") is False
@@ -194,6 +202,7 @@ def test_core_settings_and_status(tmp_path, monkeypatch):
     monkeypatch.delenv("JARVIS_PIPER_VOICES", raising=False)
     core = Core(argparse.Namespace(data_dir=str(tmp_path)))
     assert core.settings_dict()["lang"] == "auto"
+    assert core.settings_dict()["silence_ms"] == 1200
     core.settings.merge({"lang": "fr", "voice_en": "custom-voice"})
     core.apply_settings()
     assert core.voice_names["en"] == "custom-voice"

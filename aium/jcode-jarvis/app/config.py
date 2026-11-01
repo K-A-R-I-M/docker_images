@@ -86,8 +86,12 @@ SETTINGS_DEFAULTS = {
     "lang": "auto",
     "voice_en": "",
     "voice_fr": "",
+    "silence_ms": 1200,
 }
 SETTINGS_LANGS = {"auto", "en", "fr"}
+# Endpointing bounds: shorter cuts people off, longer adds dead air to every turn.
+SILENCE_MIN_MS = 600
+SILENCE_MAX_MS = 4000
 
 
 class Settings:
@@ -130,6 +134,9 @@ class Settings:
                 value = data.get(key)
                 if isinstance(value, str):
                     self.values[key] = value.strip()[:120]
+            silence = data.get("silence_ms")
+            if isinstance(silence, (int, float)) and not isinstance(silence, bool):
+                self.values["silence_ms"] = max(SILENCE_MIN_MS, min(SILENCE_MAX_MS, int(silence)))
             if save:
                 self.save()
             return dict(self.values)

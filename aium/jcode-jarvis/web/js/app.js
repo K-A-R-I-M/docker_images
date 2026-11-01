@@ -85,6 +85,7 @@ $("saveVoice").addEventListener("click", () => {
     tts: $("ttsSel").value === "on",
     voice_en: $("voiceEn").value.trim(),
     voice_fr: $("voiceFr").value.trim(),
+    silence_ms: Number($("silenceSel").value),
   });
 });
 

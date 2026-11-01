@@ -155,13 +155,15 @@ Read-only data for the panel, all authenticated when `JARVIS_TOKEN` is set:
 | `GET /api/cost?days=7` | per-day cost, today, session, last turn |
 | `GET /api/events` | recent supervisor and request events |
 | `GET /api/facts?limit=50` | stored facts plus the total `count` |
-| `GET/POST /api/settings` | `tts`, `lang`, `voice_en`, `voice_fr` (persisted to `/data/settings.json`) |
+| `GET/POST /api/settings` | `tts`, `lang`, `voice_en`, `voice_fr`, `silence_ms` (persisted to `/data/settings.json`) |
 | `GET /api/export?what=all\|facts\|turns` | JSON download |
 | `POST /api/facts`, `POST /api/facts/forget` | add a fact, delete one by id |
 | `POST /api/turn?stream=1` | SSE turn: transcript, stage, delta, sentence, done |
 
 Speech settings apply to the next turn. `tts: false` keeps text replies and
-silences server synthesis.
+silences server synthesis. `silence_ms` is how long the browser waits after you
+stop talking before it ends the turn; it applies immediately and is clamped to
+600-4000 ms.
 
 ## Tests
 

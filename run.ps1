@@ -6,7 +6,7 @@ param(
     [ValidateSet("aium", "aium-jcode")]
     [string]$Image = "aium",
     [Parameter(Position = 2)]
-    [ValidateSet("jcode", "jcode-rust", "jcode-node", "jcode-remotion", "opencode")]
+    [ValidateSet("jcode", "jcode-rust", "jcode-angular", "jcode-maven", "jcode-node", "jcode-remotion", "opencode")]
     [string]$Tag = "jcode",
     [Parameter(Position = 3)]
     [string]$Deepseek_api_key = ""
@@ -32,6 +32,8 @@ switch ($Command) {
             "aium-jcode" { 
                    .\run.ps1 build aium jcode-node; 
                    .\run.ps1 build aium jcode; 
+                   .\run.ps1 build aium jcode-angular;
+                   .\run.ps1 build aium jcode-maven;
                    .\run.ps1 build aium jcode-rust;
                    .\run.ps1 build aium jcode-remotion;
             }
@@ -43,6 +45,8 @@ switch ($Command) {
             "aium-jcode" { 
                    .\run.ps1 push aium jcode-node; 
                    .\run.ps1 push aium jcode; 
+                   .\run.ps1 push aium jcode-angular;
+                   .\run.ps1 push aium jcode-maven;
                    .\run.ps1 push aium jcode-rust;
                    .\run.ps1 push aium jcode-remotion;
             }

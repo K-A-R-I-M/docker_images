@@ -60,6 +60,14 @@ RUN mkdir -p /root/.jcode/skills \
     && cp -a /tmp/impeccable/.agent/skills/impeccable /root/.jcode/skills/impeccable \
     && rm -rf /tmp/impeccable
 
+# --- Skills: ub-mode ---------------------------------------------------------
+ARG UBMODE_REF=master
+RUN mkdir -p /root/.jcode/skills/ub-mode \
+    && git clone --depth 1 --single-branch --branch "${UBMODE_REF}" \
+        https://github.com/unclebob/ub-mode/ /tmp/ubmode \
+    && cp -a /tmp/ubmode/SKILL.md /root/.jcode/skills/ub-mode/SKILL.md \
+    && rm -rf /tmp/ubmode
+
 # --- Configuration -----------------------------------------------------------
 # Global jcode instructions live at ~/AGENTS.md (not ~/.jcode/AGENTS.md).
 COPY ./AGENTS.md /root/AGENTS.md
